@@ -12,6 +12,7 @@ import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfRect;
+import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
@@ -23,7 +24,9 @@ import org.opencv.imgproc.Imgproc;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.WindowManager;
@@ -31,7 +34,8 @@ import android.view.WindowManager;
 public class FdActivity extends Activity implements CvCameraViewListener2 {
 
     private static final String    TAG                 = "Project::MainActivity";
-    private static final Scalar    FACE_RECT_COLOR     = new Scalar(255, 0, 0, 255);
+    private static final Scalar    FACE_RECT_COLOR     = new Scalar(255, 0, 0, 255);	// Red
+    private static final Scalar    LINE_COLOR     	   = new Scalar(0, 0, 255, 255);	// Green
     public static final int        JAVA_DETECTOR       = 0;
     public static final int        NATIVE_DETECTOR     = 1;
 
@@ -46,6 +50,11 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     private File                   mCascadeFile;
     private CascadeClassifier      mJavaDetector;
     private DetectionBasedTracker  mNativeDetector;
+    private Point				   p1;
+    private Point				   p2;
+    private int screenHeight;
+    private int screenWidth;
+    private int repCount;
 
     private int                    mDetectorType       = JAVA_DETECTOR;
     private String[]               mDetectorName;
@@ -126,6 +135,14 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
 
         mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.fd_activity_surface_view);
         mOpenCvCameraView.setCvCameraViewListener(this);
+        mOpenCvCameraView.enableFpsMeter();
+        
+        DisplayMetrics metrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        screenHeight = metrics.heightPixels;
+        screenWidth = metrics.widthPixels;
+        p1 = new Point(0,screenHeight-200);
+        p2 = new Point(screenWidth,screenHeight-200);
     }
 
     @Override
@@ -191,6 +208,8 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         else {
             Log.e(TAG, "Detection method is not selected!");
         }
+        
+        Imgproc.line(mRgba, p1, p2, LINE_COLOR,8);
 
         Rect[] facesArray = faces.toArray();
         for (int i = 0; i < facesArray.length; i++)
