@@ -22,12 +22,14 @@ import org.opencv.imgproc.Imgproc;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.WindowManager;
+import android.widget.TextView;
 
 public class FdActivity extends Activity implements CvCameraViewListener2 {
 
@@ -43,12 +45,20 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     private Point				   p2;
     private int screenHeight;
     private int screenWidth;
-    private int repCount;
-
+    
     private float                  mRelativeFaceSize   = 0.2f;
     private int                    mAbsoluteFaceSize   = 0;
-
     private CameraBridgeViewBase   mOpenCvCameraView;
+    
+    final Handler myHandler = new Handler();
+    private int repCount = 0;
+    private TextView numberOfRepsText;
+
+    final Runnable updateRepCountResult = new Runnable() {
+    	public void run() {
+    		updateRepCount();
+    	}
+    };
 
     private BaseLoaderCallback  mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
@@ -105,12 +115,14 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         super.onCreate(savedInstanceState);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-        setContentView(R.layout.face_detect_surface_view);
+        setContentView(R.layout.rep_count_view);
 
-        mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.fd_activity_surface_view);
+        mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.cameraView);
         mOpenCvCameraView.setMaxFrameSize(1280, 720);
         mOpenCvCameraView.setCvCameraViewListener(this);
         mOpenCvCameraView.enableFpsMeter();
+        
+        numberOfRepsText =(TextView) findViewById(R.id.numberOfReps);
         
         // Get screen width and height
         DisplayMetrics metrics = new DisplayMetrics();
@@ -155,6 +167,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     public void onCameraViewStopped() {
         mGray.release();
         mRgba.release();
+        repCount = 0;
     }
 
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
@@ -180,9 +193,16 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         Imgproc.line(mRgba, p1, p2, LINE_COLOR,8);
 
         Rect[] facesArray = faces.toArray();
-        for (int i = 0; i < facesArray.length; i++)
-            Imgproc.rectangle(mRgba, facesArray[i].tl(), facesArray[i].br(), FACE_RECT_COLOR, 3);        
-
+        for (int i = 0; i < facesArray.length; i++){
+            Imgproc.rectangle(mRgba, facesArray[i].tl(), facesArray[i].br(), FACE_RECT_COLOR, 3); 
+            repCount++;
+        }
+        
+        myHandler.post(updateRepCountResult);
         return mRgba;
+    }
+    
+    public void updateRepCount(){
+    	numberOfRepsText.setText("Reps = " + String.valueOf(repCount));
     }
 }
