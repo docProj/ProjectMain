@@ -35,7 +35,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
 
     private static final String    TAG                 = "Project::MainActivity";
     private static final Scalar    FACE_RECT_COLOR     = new Scalar(255, 0, 0, 255);	// Red
-    private static final Scalar    LINE_COLOR     	   = new Scalar(0, 0, 255, 255);	// Green
+    private static final Scalar    LINE_COLOR     	   = new Scalar(0, 0, 255);	// Green
 
     private Mat                    mRgba;
     private Mat                    mGray;
@@ -53,6 +53,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     final Handler myHandler = new Handler();
     private int repCount = 0;
     private TextView numberOfRepsText;
+    int repTestFlag = 0;
 
     final Runnable updateRepCountResult = new Runnable() {
     	public void run() {
@@ -129,8 +130,8 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
         screenHeight = metrics.heightPixels;
         screenWidth = metrics.widthPixels;
-        p1 = new Point(0,screenHeight-200);
-        p2 = new Point(screenWidth,screenHeight-200);
+        p1 = new Point(0,screenHeight-600);
+        p2 = new Point(screenWidth,screenHeight-600);
     }
 
     @Override
@@ -190,12 +191,17 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         else 
             Log.e(TAG, "Detection method is not selected!");
         
-        Imgproc.line(mRgba, p1, p2, LINE_COLOR,8);
-
+    	Imgproc.line(mRgba, p1, p2, LINE_COLOR,8);
+        
         Rect[] facesArray = faces.toArray();
         for (int i = 0; i < facesArray.length; i++){
             Imgproc.rectangle(mRgba, facesArray[i].tl(), facesArray[i].br(), FACE_RECT_COLOR, 3); 
-            repCount++;
+            if(facesArray[i].y < p1.y && repTestFlag == 0){
+            	repCount++;
+            	repTestFlag = 1;
+            }
+            if(facesArray[i].y > p1.y)
+            	repTestFlag = 0;
         }
         
         myHandler.post(updateRepCountResult);
