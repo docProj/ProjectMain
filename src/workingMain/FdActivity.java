@@ -71,6 +71,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     String id;
     String repDisplay;
 
+    /** Thread to update the number of reps on screen. */
     final Runnable updateRepCountResult = new Runnable() {
     	public void run() {
     		updateRepCount();
@@ -156,7 +157,6 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
                     insertDbData();
                     readDbData();
                     repCount = 0;
-
                 } catch (Exception e) {
                     Log.i(DCDEBUG, "ERROR WITH ONLICK LISTENER: " + e.getMessage());
                 }
@@ -169,6 +169,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
 
     @Override
     public void onPause() {
+    	dropTable();
         super.onPause();
         if (mOpenCvCameraView != null)
             mOpenCvCameraView.disableView();
@@ -185,7 +186,14 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
             mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
         }
     }
+    
+    public void onDestroy() {
+        db.close();
+        super.onDestroy();
+        mOpenCvCameraView.disableView();
+    }
 
+    /** Open the database, or create it if it does not exist. */
     public void openDatabase() {
         try {
             String SDcardPath = "data/data/org.opencv.samples.facedetect";
@@ -200,12 +208,14 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         
     }
 
+    /** Create the tables if they do not exist in the DB and populate. */
     public void insertDbData() {
+
         // create the table
         db.beginTransaction();
         try {
             // need to edit XML
-            db.execSQL("create table repTable("
+            db.execSQL("create table if not exists repTable("
                 + "tblID integer PRIMARY KEY autoincrement, "
                 + "Reps integer); ");
             db.setTransactionSuccessful();
@@ -218,7 +228,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         finally {
             db.endTransaction();
         }
-
+     
         // populate the table
         db.beginTransaction();
         try {
@@ -236,6 +246,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         }
     }
 
+    /** Query the DB and run the update thread. */
     public void readDbData() {
     	int i1 = 0;
     	int i2 = 1;
@@ -243,13 +254,18 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
 
         try {
             Cursor curs =  db.rawQuery("SELECT * FROM repTable where tblID = (select max(tblID) from repTable)", null);
-            curs.moveToNext();
+            
+            if (curs.moveToFirst()){
+            	do {
+            		id = curs.getString(i1);
+                    repDisplay = curs.getString(i2);
 
-            id = curs.getString(i1);
-            repDisplay = curs.getString(i2);
-
-            myHandler.post(updateLastRepQuery);
-            i1+=2; i2+=2;
+                    myHandler.post(updateLastRepQuery);
+                    i1+=2; i2+=2;
+            	} while (curs.moveToNext());
+            	
+            }
+      
             db.setTransactionSuccessful();
         } catch (SQLException e) {
             Log.i(DCDEBUG, "Error reading from DB: " + e.getMessage());
@@ -259,11 +275,12 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         }
     }
 
+    /** Drop the repTable from the DB. */
     public void dropTable() {
         // (clean start) action query to drop table
     	db.beginTransaction();
         try {
-            db.execSQL("DROP TABLE IF EXISTS repTable;");
+            db.execSQL("drop table if exists repTable;");
             db.setTransactionSuccessful();
             Log.i(DCDEBUG, "Table dropped successfully");
         } catch (Exception e) {
@@ -275,22 +292,6 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         }
     }
 
-    public void getScreenHeightWidth() {
-        DisplayMetrics metrics = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(metrics);
-        screenHeight = metrics.heightPixels;
-        screenWidth = metrics.widthPixels;
-        p1 = new Point(0,screenHeight-600);
-        p2 = new Point(screenWidth,screenHeight-600);
-    }
-
-    public void onDestroy() {
-        super.onDestroy();
-        mOpenCvCameraView.disableView();
-        dropTable();
-        db.close();
-    }
-
     public void onCameraViewStarted(int width, int height) {
         mGray = new Mat();
         mRgba = new Mat();
@@ -299,7 +300,6 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     public void onCameraViewStopped() {
         mGray.release();
         mRgba.release();
-        repCount = 0;
     }
 
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
@@ -338,11 +338,22 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         return mRgba;
     }
     
+    /** Update the on screen number of reps. */
     public void updateRepCount() {
     	numberOfRepsText.setText("Reps = " + String.valueOf(repCount));
     }
     
     public void updateLastSet() {
     	lastDbRepEntry.setText("Program Finished - Set: " + id + " Reps: " + repDisplay);
+    }
+    
+    /** Calculate and store the screen height and width. */
+    public void getScreenHeightWidth() {
+        DisplayMetrics metrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        screenHeight = metrics.heightPixels;
+        screenWidth = metrics.widthPixels;
+        p1 = new Point(0,screenHeight-600);
+        p2 = new Point(screenWidth,screenHeight-600);
     }
 }
