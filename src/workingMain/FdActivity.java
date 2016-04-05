@@ -16,19 +16,14 @@ import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
-import org.opencv.objdetect.CascadeClassifier;
 import org.opencv.imgproc.Imgproc;
 
-import android.widget.Toast; 
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.Display;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.TextView;
@@ -43,7 +38,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
 
     private static final String    TAG                 = "Project::MainActivity";
     private static final String    DCDEBUG             = "darrynDebug";
-    private static final Scalar    FACE_RECT_COLOR     = new Scalar(255, 0, 0, 255);	// Red
+    private static final Scalar    DETECT_RECT_COLOR   = new Scalar(255, 0, 0, 255);	// Red
     private static final Scalar    LINE_COLOR     	   = new Scalar(0, 0, 255, 255);	// Green
 
     private TextView numberOfRepsText;
@@ -55,8 +50,6 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     private Mat                    mGray;
     private File                   mCascadeFile;
     private DetectionBasedTracker  mNativeDetector;
-    private float                  mRelativeFaceSize   = 0.2f;
-    private int                    mAbsoluteFaceSize   = 0;
     private CameraBridgeViewBase   mOpenCvCameraView;
 
     private Point				   p1;
@@ -66,10 +59,9 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     
     final Handler myHandler = new Handler();
     private int repCount = 0;
-    int repTestFlag = 0;
-    
-    String id;
-    String repDisplay;
+    private int repTestFlag = 0;
+    private String id;
+    private String repDisplay;
 
     /** Thread to update the number of reps on screen. */
     final Runnable updateRepCountResult = new Runnable() {
@@ -210,7 +202,6 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
 
     /** Create the tables if they do not exist in the DB and populate. */
     public void insertDbData() {
-
         // create the table
         db.beginTransaction();
         try {
@@ -254,7 +245,6 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
 
         try {
             Cursor curs =  db.rawQuery("SELECT * FROM repTable where tblID = (select max(tblID) from repTable)", null);
-            
             if (curs.moveToFirst()){
             	do {
             		id = curs.getString(i1);
@@ -263,9 +253,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
                     myHandler.post(updateLastRepQuery);
                     i1+=2; i2+=2;
             	} while (curs.moveToNext());
-            	
             }
-      
             db.setTransactionSuccessful();
         } catch (SQLException e) {
             Log.i(DCDEBUG, "Error reading from DB: " + e.getMessage());
@@ -306,31 +294,23 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         mRgba = inputFrame.rgba();
         mGray = inputFrame.gray();
 
-        if (mAbsoluteFaceSize == 0) {
-            int height = mGray.rows();
-            if (Math.round(height * mRelativeFaceSize) > 0) {
-                mAbsoluteFaceSize = Math.round(height * mRelativeFaceSize);
-            }
-            mNativeDetector.setMinFaceSize(mAbsoluteFaceSize);
-        }
-
-        MatOfRect faces = new MatOfRect();
+        MatOfRect detectedObj = new MatOfRect();
 
         if (mNativeDetector != null)
-                mNativeDetector.detect(mGray, faces);
+                mNativeDetector.detect(mGray, detectedObj);
         else 
             Log.e(TAG, "Detection method is not selected!");
         
     	Imgproc.line(mRgba, p1, p2, LINE_COLOR,8);
         
-        Rect[] facesArray = faces.toArray();
-        for (int i = 0; i < facesArray.length; i++){
-            Imgproc.rectangle(mRgba, facesArray[i].tl(), facesArray[i].br(), FACE_RECT_COLOR, 3); 
-            if(facesArray[i].y < p1.y && repTestFlag == 0){
+        Rect[] detObjArray = detectedObj.toArray();
+        for (int i = 0; i < detObjArray.length; i++){
+            Imgproc.rectangle(mRgba, detObjArray[i].tl(), detObjArray[i].br(), DETECT_RECT_COLOR, 3); 
+            if(detObjArray[i].y < p1.y && repTestFlag == 0){
             	repCount++;
             	repTestFlag = 1;
             }
-            if(facesArray[i].y > p1.y)
+            if(detObjArray[i].y > p1.y)
             	repTestFlag = 0;
         }
         
@@ -344,7 +324,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     }
     
     public void updateLastSet() {
-    	lastDbRepEntry.setText("Program Finished - Set: " + id + " Reps: " + repDisplay);
+    	lastDbRepEntry.setText("Current Set Finished - Set: #" + id + " Reps: " + repDisplay);
     }
     
     /** Calculate and store the screen height and width. */
