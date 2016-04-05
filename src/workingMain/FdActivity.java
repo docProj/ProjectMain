@@ -291,6 +291,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     }
 
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
+    	
         mRgba = inputFrame.rgba();
         mGray = inputFrame.gray();
 
