@@ -41,10 +41,10 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     private static final Scalar    DETECT_RECT_COLOR   = new Scalar(255, 0, 0, 255);	// Red
     private static final Scalar    LINE_COLOR     	   = new Scalar(0, 0, 255, 255);	// Green
 
-    private TextView numberOfRepsText;
-    private TextView lastDbRepEntry;
-    private Button repsToDB;
-    private SQLiteDatabase db;
+    private TextView 			   numberOfRepsText;
+    private TextView 			   lastDbRepEntry;
+    private Button 				   repsToDB;
+    private SQLiteDatabase 		   db;
 
     private Mat                    mRgba;
     private Mat                    mGray;
@@ -54,14 +54,14 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
 
     private Point				   p1;
     private Point				   p2;
-    private int screenHeight;
-    private int screenWidth;
+    private int 				   screenHeight;
+    private int 				   screenWidth;
     
-    final Handler myHandler = new Handler();
-    private int repCount = 0;
-    private int repTestFlag = 0;
-    private String id;
-    private String repDisplay;
+    final Handler 				   myHandler 			= new Handler();
+    private int 				   repCount 			= 0;
+    private int 				   repTestFlag 			= 0;
+    private String 				   id;
+    private String 				   repDisplay;
 
     /** Thread to update the number of reps on screen. */
     final Runnable updateRepCountResult = new Runnable() {
@@ -130,17 +130,15 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         Log.i(TAG, "called onCreate");
         super.onCreate(savedInstanceState);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
         setContentView(R.layout.rep_count_view);
+        numberOfRepsText =(TextView) findViewById(R.id.numberOfReps);
+        lastDbRepEntry =(TextView) findViewById(R.id.lastDbRepEntry);
+        repsToDB = (Button) findViewById(R.id.repsToDB);
 
         mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.cameraView);
         mOpenCvCameraView.setMaxFrameSize(1280, 720);
         mOpenCvCameraView.setCvCameraViewListener(this);
         mOpenCvCameraView.enableFpsMeter();
-        
-        numberOfRepsText =(TextView) findViewById(R.id.numberOfReps);
-        lastDbRepEntry =(TextView) findViewById(R.id.lastDbRepEntry);
-        repsToDB = (Button) findViewById(R.id.repsToDB);
         
         repsToDB.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -314,7 +312,6 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
             if(detObjArray[i].y > p1.y)
             	repTestFlag = 0;
         }
-        
         myHandler.post(updateRepCountResult);
         return mRgba;
     }
