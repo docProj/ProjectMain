@@ -29,5 +29,25 @@
                 android:textAppearance="?android:attr/textAppearanceLarge"
                 android:textSize="25dp" />
         
+        <Button
+            style="?android:attr/buttonStyleSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentBottom="true"
+            android:paddingRight="20dp"
+            android:text="Finish Set"
+            android:id="@+id/repsToDB" />
+        
+        <TextView
+                android:id="@+id/lastDbRepEntry"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentBottom="true"
+                android:paddingRight="20dp"
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:textSize="25dp" />
+        
     </RelativeLayout>
 </LinearLayout>
