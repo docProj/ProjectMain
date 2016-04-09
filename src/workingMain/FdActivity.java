@@ -32,6 +32,7 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.database.Cursor;
+import android.content.Intent;
 
 
 public class FdActivity extends Activity implements CvCameraViewListener2 {
@@ -44,6 +45,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     private TextView 			   numberOfRepsText;
     private TextView 			   lastDbRepEntry;
     private Button 				   repsToDB;
+    private Button 				   finishSession;
     private SQLiteDatabase 		   db;
 
     private Mat                    mRgba;
@@ -62,14 +64,13 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     private int 				   repTestFlag 			= 0;
     private String 				   id;
     private String 				   repDisplay;
-
+    
     /** Thread to update the number of reps on screen. */
     final Runnable updateRepCountResult = new Runnable() {
     	public void run() {
     		updateRepCount();
     	}
     };
-    
     final Runnable updateLastRepQuery = new Runnable() {
     	public void run() {
     		updateLastSet();
@@ -102,14 +103,12 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
                         os.close();
 
                         mNativeDetector = new DetectionBasedTracker(mCascadeFile.getAbsolutePath(), 0);
-
                         cascadeDir.delete();
 
                     } catch (IOException e) {
                         e.printStackTrace();
                         Log.e(TAG, "Failed to load cascade. Exception thrown: " + e);
                     }
-
                     mOpenCvCameraView.enableView();
                 } break;
                 default:
@@ -119,10 +118,6 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
             }
         }
     };
-
-    public FdActivity() {
-    	Log.i(TAG, "Instantiated new " + this.getClass());
-    }
 
     /** Called when the activity is first created. */
     @Override
@@ -134,6 +129,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         numberOfRepsText =(TextView) findViewById(R.id.numberOfReps);
         lastDbRepEntry =(TextView) findViewById(R.id.lastDbRepEntry);
         repsToDB = (Button) findViewById(R.id.repsToDB);
+        finishSession = (Button) findViewById(R.id.finishSession);
 
         mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.cameraView);
         mOpenCvCameraView.setMaxFrameSize(1280, 720);
@@ -152,7 +148,21 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
                 }
             }
         });    
-
+        finishSession.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                	mGray.release();
+                    mRgba.release();
+                	mOpenCvCameraView.disableView();
+                    Intent finalPage = new Intent(FdActivity.this, FinalActivity.class);
+                    startActivity(finalPage);
+                } catch (Exception e) {
+                    Log.i(DCDEBUG, "ERROR WITH ONLICK STARTING FINAL ACTIVITY LISTENER: " + e.getMessage());
+                }
+            }
+        });  
+        
         getScreenHeightWidth();
         openDatabase();
     }
@@ -194,8 +204,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         } catch (SQLiteException e) {
             Log.i(DCDEBUG, "Error opening DB: " + e.getMessage());
             finish();
-        }
-        
+        }      
     }
 
     /** Create the tables if they do not exist in the DB and populate. */
@@ -213,7 +222,6 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
             Log.i(DCDEBUG, "Error creating table: " + e1.getMessage());
             finish();
         }
-
         finally {
             db.endTransaction();
         }
@@ -229,7 +237,6 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
             Log.i(DCDEBUG, "Error inserting into DB: " + e2.getMessage());
             finish();
         }
-
         finally {
             db.endTransaction();
         }
@@ -247,7 +254,6 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
             	do {
             		id = curs.getString(i1);
                     repDisplay = curs.getString(i2);
-
                     myHandler.post(updateLastRepQuery);
                     i1+=2; i2+=2;
             	} while (curs.moveToNext());
@@ -289,12 +295,10 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     }
 
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
-    	
         mRgba = inputFrame.rgba();
         mGray = inputFrame.gray();
 
         MatOfRect detectedObj = new MatOfRect();
-
         if (mNativeDetector != null)
                 mNativeDetector.detect(mGray, detectedObj);
         else 
@@ -304,12 +308,13 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         
         Rect[] detObjArray = detectedObj.toArray();
         for (int i = 0; i < detObjArray.length; i++){
+        	Point centerRec = new Point((detObjArray[i].tl().x+detObjArray[i].br().x)/2,(detObjArray[i].tl().y+detObjArray[i].br().y)/2);
             Imgproc.rectangle(mRgba, detObjArray[i].tl(), detObjArray[i].br(), DETECT_RECT_COLOR, 3); 
-            if(detObjArray[i].y < p1.y && repTestFlag == 0){
+            if(centerRec.y < p1.y && repTestFlag == 0){
             	repCount++;
             	repTestFlag = 1;
             }
-            if(detObjArray[i].y > p1.y)
+            if(centerRec.y > p1.y+detObjArray[i].height/2)
             	repTestFlag = 0;
         }
         myHandler.post(updateRepCountResult);
@@ -322,7 +327,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     }
     
     public void updateLastSet() {
-    	lastDbRepEntry.setText("Current Set Finished - Set: #" + id + " Reps: " + repDisplay);
+    	lastDbRepEntry.setText("Set Recorded - Set: #" + id + " Reps: " + repDisplay);
     }
     
     /** Calculate and store the screen height and width. */
