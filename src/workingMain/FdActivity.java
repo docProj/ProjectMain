@@ -4,6 +4,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Locale;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
@@ -56,14 +59,20 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
 
     private Point				   p1;
     private Point				   p2;
+    private int					   lineSet				= 600;
     private int 				   screenHeight;
     private int 				   screenWidth;
     
     final Handler 				   myHandler 			= new Handler();
     private int 				   repCount 			= 0;
-    private int 				   repTestFlag 			= 0;
-    private String 				   id;
+    private boolean 			   repTestFlag 			= false;
     private String 				   repDisplay;
+    private String				   newDate;
+    private String 				   formattedDate;
+    private String 				   userLifting			= "Darryn";
+    private String				   exerciseToDo			= "Deadlift";
+    private int					   weightToLift			= 10;
+    private int 				   setNumber			= 0;
     
     /** Thread to update the number of reps on screen. */
     final Runnable updateRepCountResult = new Runnable() {
@@ -91,7 +100,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
                         // load cascade file from application resources
                         InputStream is = getResources().openRawResource(R.raw.lbpcascade_weightplate2);
                         File cascadeDir = getDir("cascade", Context.MODE_PRIVATE);
-                        mCascadeFile = new File(cascadeDir, "lbpcascade_weightplate2.xml");
+                        mCascadeFile = new File(cascadeDir, "lbpcascade_weightplate5.xml");
                         FileOutputStream os = new FileOutputStream(mCascadeFile);
 
                         byte[] buffer = new byte[4096];
@@ -143,6 +152,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
                     insertDbData();
                     readDbData();
                     repCount = 0;
+                    setNumber++;
                 } catch (Exception e) {
                     Log.i(DCDEBUG, "ERROR WITH ONLICK LISTENER: " + e.getMessage());
                 }
@@ -152,19 +162,26 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
             @Override
             public void onClick(View v) {
                 try {
+                	setNumber = 0;
                 	mGray.release();
                     mRgba.release();
                 	mOpenCvCameraView.disableView();
                     Intent finalPage = new Intent(FdActivity.this, FinalActivity.class);
-                    startActivity(finalPage);
+                    startActivity(finalPage);                    
                 } catch (Exception e) {
                     Log.i(DCDEBUG, "ERROR WITH ONLICK STARTING FINAL ACTIVITY LISTENER: " + e.getMessage());
                 }
             }
         });  
-        
+        Calendar cal = Calendar.getInstance();
+        SimpleDateFormat df = new SimpleDateFormat("dd-MM-yy", Locale.UK);
+        formattedDate = df.format(cal.getTime());
         getScreenHeightWidth();
         openDatabase();
+        
+        Intent startingPage = new Intent(FdActivity.this, StartingActivity.class);
+        startActivity(startingPage);  
+        
     }
 
     @Override
@@ -215,6 +232,11 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
             // need to edit XML
             db.execSQL("create table if not exists repTable("
                 + "tblID integer PRIMARY KEY autoincrement, "
+            	+ "Date text, "
+                + "User text, "
+            	+ "Exercise text, "
+                + "Weight integer, "
+            	+ "SetNumber integer, "
                 + "Reps integer); ");
             db.setTransactionSuccessful();
             Log.i(DCDEBUG, "Table created successfully");
@@ -230,7 +252,13 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         db.beginTransaction();
         try {
             // need to edit XML
-            db.execSQL("insert into repTable(Reps) values ('"+repCount+"');");
+            db.execSQL("insert into repTable(Date, User, Exercise, Weight, SetNumber, Reps) values "
+            		+ "('"+formattedDate+"',"
+            		+ "'"+userLifting+"',"
+            		+ "'"+exerciseToDo+"',"
+            		+ "'"+weightToLift+"',"
+            		+ "'"+setNumber+"',"
+            		+ "'"+repCount+"');");
             db.setTransactionSuccessful();
             Log.i(DCDEBUG, repCount + " inserted into table successfully");
         } catch (SQLException e2) {
@@ -244,18 +272,18 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
 
     /** Query the DB and run the update thread. */
     public void readDbData() {
-    	int i1 = 0;
-    	int i2 = 1;
+    	int i=0;
         db.beginTransaction();
 
         try {
             Cursor curs =  db.rawQuery("SELECT * FROM repTable where tblID = (select max(tblID) from repTable)", null);
             if (curs.moveToFirst()){
             	do {
-            		id = curs.getString(i1);
-                    repDisplay = curs.getString(i2);
+            		newDate = curs.getString(i+1);
+            		setNumber = curs.getInt(i+5);
+                    repDisplay = curs.getString(i+6);
                     myHandler.post(updateLastRepQuery);
-                    i1+=2; i2+=2;
+                    i+=7;
             	} while (curs.moveToNext());
             }
             db.setTransactionSuccessful();
@@ -310,12 +338,12 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         for (int i = 0; i < detObjArray.length; i++){
         	Point centerRec = new Point((detObjArray[i].tl().x+detObjArray[i].br().x)/2,(detObjArray[i].tl().y+detObjArray[i].br().y)/2);
             Imgproc.rectangle(mRgba, detObjArray[i].tl(), detObjArray[i].br(), DETECT_RECT_COLOR, 3); 
-            if(centerRec.y < p1.y && repTestFlag == 0){
+            if(centerRec.y < p1.y && repTestFlag == false){
             	repCount++;
-            	repTestFlag = 1;
+            	repTestFlag = true;
             }
             if(centerRec.y > p1.y+detObjArray[i].height/2)
-            	repTestFlag = 0;
+            	repTestFlag = false;
         }
         myHandler.post(updateRepCountResult);
         return mRgba;
@@ -327,7 +355,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     }
     
     public void updateLastSet() {
-    	lastDbRepEntry.setText("Set Recorded - Set: #" + id + " Reps: " + repDisplay);
+    	lastDbRepEntry.setText("Date: " + newDate + " Set: #" + setNumber + " Reps: " + repDisplay);
     }
     
     /** Calculate and store the screen height and width. */
@@ -336,7 +364,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
         screenHeight = metrics.heightPixels;
         screenWidth = metrics.widthPixels;
-        p1 = new Point(0,screenHeight-600);
-        p2 = new Point(screenWidth,screenHeight-600);
+        p1 = new Point(0,screenHeight-lineSet);
+        p2 = new Point(screenWidth,screenHeight-lineSet);
     }
 }
