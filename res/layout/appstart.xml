@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:tools="http://schemas.android.com/tools"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                tools:context=".MainActivity"
+
+                android:padding="10dp"
+        >
+
+    <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="10dp"
+
+            android:weightSum="1" android:layout_alignParentBottom="true"
+            android:layout_alignParentTop="true" android:layout_alignParentEnd="true"
+            android:layout_alignParentStart="true"
+            >
+
+
+        <Spinner
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/userSpinner" 
+                android:layout_gravity="center_horizontal" 
+                android:layout_weight="0.00"
+                android:spinnerMode="dropdown" 
+                android:text="Who is lifting ?" />
+        <Spinner
+                android:layout_width="match_parent"
+                android:layout_height="62dp"
+                android:id="@+id/exerciseSpinner" 
+                android:layout_gravity="center_horizontal" 
+                android:spinnerMode="dropdown" 
+                android:text="Exercise: " />
+        <EditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="number"
+                android:ems="10"
+                android:id="@+id/weightInput" 
+                android:layout_gravity="center_horizontal" 
+                android:layout_weight="0.08"
+                android:text="Weight in KG"/>
+        <EditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="number"
+                android:ems="10"
+                android:id="@+id/setInput" 
+                android:layout_gravity="center_horizontal" 
+                android:layout_weight="0.08"
+                android:text="Number of Sets"/>
+
+        <Button
+            android:id="@+id/startOpenCV"
+            android:layout_width="315dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.31"
+            android:text="GO" />
+
+    </LinearLayout>
+
+</RelativeLayout>
+
