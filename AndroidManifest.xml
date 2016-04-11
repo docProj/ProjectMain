@@ -21,11 +21,13 @@
         
         <activity
             android:name="StartingActivity"
+            android:screenOrientation="landscape"
             android:label="@string/app_name">
          </activity> 
         
         <activity
             android:name="FinalActivity"
+            android:screenOrientation="landscape"
             android:label="@string/app_name">
          </activity>     
     </application>
