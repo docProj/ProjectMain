@@ -1,11 +1,9 @@
 package org.opencv.samples.facedetect;
 
 import java.io.File;
-import java.io.FileDescriptor;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
@@ -24,12 +22,6 @@ import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
 import org.opencv.imgproc.Imgproc;
 
 import android.app.Activity;
-import android.app.Fragment;
-import android.app.FragmentManager;
-import android.app.FragmentTransaction;
-import android.app.Fragment.SavedState;
-import android.app.FragmentManager.BackStackEntry;
-import android.app.FragmentManager.OnBackStackChangedListener;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
@@ -67,6 +59,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
 
     private Point				   p1;
     private Point				   p2;
+    private int					   lineSet				= 600;
     private int 				   screenHeight;
     private int 				   screenWidth;
     
@@ -80,6 +73,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     private String				   exerciseToDo			= "Deadlift";
     private int					   weightToLift			= 10;
     private int 				   setNumber			= 0;
+    private String[]			   exerciseList         = {"Deadlift", "Bicep Curls"};
     
     /** Thread to update the number of reps on screen. */
     final Runnable updateRepCountResult = new Runnable() {
@@ -169,7 +163,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
             @Override
             public void onClick(View v) {
                 try {
-                	setNumber = 0;
+                	setNumber = 1;
                 	mGray.release();
                     mRgba.release();
                 	mOpenCvCameraView.disableView();
@@ -185,17 +179,15 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         formattedDate = df.format(cal.getTime());
         getScreenHeightWidth();
         openDatabase();
+
+        Intent startingPage = new Intent(FdActivity.this, StartingActivity.class);
+        startActivity(startingPage); 
         
-//      Fragment fr = new StartingFragment();
-//      FragmentManager fm =  getFragmentManager();
-//		FragmentTransaction ft = fm.beginTransaction();
-//		ft.replace(R.id.fragment_place, fr);
-//		ft.commit();
     }
 
     @Override
     public void onPause() {
-    	dropTable();
+    	//dropTable();
         super.onPause();
         if (mOpenCvCameraView != null)
             mOpenCvCameraView.disableView();
@@ -227,6 +219,37 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
             Log.i(DCDEBUG, "DB Path: " + DBpath);
             db = SQLiteDatabase.openDatabase(DBpath, null, SQLiteDatabase.CREATE_IF_NECESSARY);
             Log.i(DCDEBUG, "DB Opened ");
+            
+         // create the table
+            db.beginTransaction();
+            try {
+                // need to edit XML
+                db.execSQL("create table if not exists repTable("
+                    + "tblID integer PRIMARY KEY autoincrement, "
+                	+ "Date text, "
+                    + "User text, "
+                	+ "Exercise text, "
+                    + "Weight integer, "
+                	+ "SetNumber integer, "
+                    + "Reps integer); ");
+                Log.i(DCDEBUG, "Rep Table created successfully");
+                db.execSQL("create table if not exists exerciseTable("
+                    + "exerID integer PRIMARY KEY autoincrement, "
+                    + "Exercise text); ");
+                db.execSQL("insert into exerciseTable(Exercise) values "
+                		+ "('"+exerciseList[0]+"');"); 
+                db.execSQL("insert into exerciseTable(Exercise) values "
+                		+ "('"+exerciseList[1]+"');");
+                Log.i(DCDEBUG, "Exercise Table created successfully");
+                db.setTransactionSuccessful();    
+            } catch (SQLException e1) {
+                Log.i(DCDEBUG, "Error creating table: " + e1.getMessage());
+                finish();
+            }
+            finally {
+                db.endTransaction();
+            }
+            
         } catch (SQLiteException e) {
             Log.i(DCDEBUG, "Error opening DB: " + e.getMessage());
             finish();
@@ -235,29 +258,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
 
     /** Create the tables if they do not exist in the DB and populate. */
     public void insertDbData() {
-        // create the table
-        db.beginTransaction();
-        try {
-            // need to edit XML
-            db.execSQL("create table if not exists repTable("
-                + "tblID integer PRIMARY KEY autoincrement, "
-            	+ "Date text, "
-                + "User text, "
-            	+ "Exercise text, "
-                + "Weight integer, "
-            	+ "SetNumber integer, "
-                + "Reps integer); ");
-            db.setTransactionSuccessful();
-            Log.i(DCDEBUG, "Table created successfully");
-        } catch (SQLException e1) {
-            Log.i(DCDEBUG, "Error creating table: " + e1.getMessage());
-            finish();
-        }
-        finally {
-            db.endTransaction();
-        }
      
-        // populate the table
         db.beginTransaction();
         try {
             // need to edit XML
@@ -309,7 +310,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         // (clean start) action query to drop table
     	db.beginTransaction();
         try {
-            db.execSQL("drop table if exists repTable;");
+            db.execSQL("drop table if exists repTable, exerciseTable;");
             db.setTransactionSuccessful();
             Log.i(DCDEBUG, "Table dropped successfully");
         } catch (Exception e) {
@@ -373,7 +374,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
         screenHeight = metrics.heightPixels;
         screenWidth = metrics.widthPixels;
-        p1 = new Point(0,screenHeight-600);
-        p2 = new Point(screenWidth,screenHeight-600);
+        p1 = new Point(0,screenHeight-lineSet);
+        p2 = new Point(screenWidth,screenHeight-lineSet);
     }
 }
