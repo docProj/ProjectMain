@@ -69,11 +69,10 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     private String 				   repDisplay;
     private String				   newDate;
     private String 				   formattedDate;
-    private String 				   userLifting			= "Darryn";
-    private String				   exerciseToDo			= "Deadlift";
-    private int					   weightToLift			= 10;
+    private String 				   userLifting;
+    private String				   exerciseToDo;
+    private int					   weightToLift;
     private int 				   setNumber			= 0;
-    private String[]			   exerciseList         = {"Deadlift", "Bicep Curls"};
     
     /** Thread to update the number of reps on screen. */
     final Runnable updateRepCountResult = new Runnable() {
@@ -167,6 +166,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
                 	mGray.release();
                     mRgba.release();
                 	mOpenCvCameraView.disableView();
+                	db.close();
                     Intent finalPage = new Intent(FdActivity.this, FinalActivity.class);
                     startActivity(finalPage);                    
                 } catch (Exception e) {
@@ -179,10 +179,26 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         formattedDate = df.format(cal.getTime());
         getScreenHeightWidth();
         openDatabase();
-
-        Intent startingPage = new Intent(FdActivity.this, StartingActivity.class);
-        startActivity(startingPage); 
         
+        Intent startingPage = new Intent(FdActivity.this, StartingActivity.class);
+        startActivityForResult(startingPage,111); 
+        
+    }
+    
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    	super.onActivityResult(requestCode, resultCode, data);
+    	try {
+    		if ((requestCode == 111) && (resultCode == Activity.RESULT_OK)) {
+    			Bundle userInputReceived = data.getExtras();
+    			userLifting = userInputReceived.getString("user");
+    			exerciseToDo = userInputReceived.getString("exer");
+    			weightToLift = userInputReceived.getInt("weight");
+    			Log.i(DCDEBUG, "Returned Values: " + userLifting + ", " + exerciseToDo + ", " + weightToLift);
+    		}
+    	} catch (Exception e) {
+    		Log.i(DCDEBUG, "ERROR WITH RETRIEVING BUNDLE DATA" + e.getMessage());
+    	}
     }
 
     @Override
@@ -233,14 +249,6 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
                 	+ "SetNumber integer, "
                     + "Reps integer); ");
                 Log.i(DCDEBUG, "Rep Table created successfully");
-                db.execSQL("create table if not exists exerciseTable("
-                    + "exerID integer PRIMARY KEY autoincrement, "
-                    + "Exercise text); ");
-                db.execSQL("insert into exerciseTable(Exercise) values "
-                		+ "('"+exerciseList[0]+"');"); 
-                db.execSQL("insert into exerciseTable(Exercise) values "
-                		+ "('"+exerciseList[1]+"');");
-                Log.i(DCDEBUG, "Exercise Table created successfully");
                 db.setTransactionSuccessful();    
             } catch (SQLException e1) {
                 Log.i(DCDEBUG, "Error creating table: " + e1.getMessage());
@@ -310,7 +318,8 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         // (clean start) action query to drop table
     	db.beginTransaction();
         try {
-            db.execSQL("drop table if exists repTable, exerciseTable;");
+        	db.execSQL("drop table if exists repTable;");
+            //db.execSQL("drop table if exists exerciseTable;");
             db.setTransactionSuccessful();
             Log.i(DCDEBUG, "Table dropped successfully");
         } catch (Exception e) {
@@ -366,6 +375,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     
     public void updateLastSet() {
     	lastDbRepEntry.setText("Date: " + newDate + " Set: #" + setNumber + " Reps: " + repDisplay);
+    	//lastDbRepEntry.setText("User: " + userLifting + " Exercise: #" + exerciseToDo + " Weight: " + weightToLift + "kg");
     }
     
     /** Calculate and store the screen height and width. */

@@ -1,13 +1,7 @@
 package org.opencv.samples.facedetect;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import android.app.Activity;
-import android.database.Cursor;
-import android.database.SQLException;
-import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteException;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -17,16 +11,18 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.Toast;
 
 public class StartingActivity extends Activity implements OnItemSelectedListener {
 	private static final String    DCDEBUG             = "darrynStartingDebug";
-	private SQLiteDatabase 		   db;
-	//private String[] 			   exerciseList		   = {"Deadlift","Bicep Curls"};
-	private String[] 			   exerciseList;
+	private String[] 			   exerciseList		   = {"Deadlift","Bicep Curls"};
 	private EditText			   userView;
 	private Spinner				   exerciseSpinner;
 	private EditText			   weightInput;
 	private	Button 				   startOpenCV;
+	private String				   returnUser;
+	private String				   returnExercise;
+	private int				       returnWeight;
 	
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -41,84 +37,40 @@ public class StartingActivity extends Activity implements OnItemSelectedListener
         startOpenCV.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+            	storeValuesToPass();
                 finish();
             }
         });  
-        
-        startingOpenDatabase();
-        getSpinnerValues();
-        db.close();
         
         ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, exerciseList);
         spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         exerciseSpinner.setAdapter(spinnerAdapter); 
         exerciseSpinner.setOnItemSelectedListener(this);
     }
-    
-    @Override
-    public void onPause() {
-    	super.onPause();
-    	db.beginTransaction();
-        try {
-            db.execSQL("drop table if exists exerciseTable;");
-            db.setTransactionSuccessful();
-            Log.i(DCDEBUG, "Table dropped successfully");
-        } catch (Exception e) {
-            Log.i(DCDEBUG, "Table dropped error: " + e.getMessage());
-            finish(); 
-        }
-        finally {
-            db.endTransaction();
-        }
-    }
-    
-    /** Open the database, or create it if it does not exist. */
-    public void startingOpenDatabase() {
-        try {
-            String SDcardPath = "data/data/org.opencv.samples.facedetect";
-            String DBpath = SDcardPath + "/" + "projectDB.db";
-            Log.i(DCDEBUG, "DB Path: " + DBpath);
-            db = SQLiteDatabase.openDatabase(DBpath, null, SQLiteDatabase.CREATE_IF_NECESSARY);
-            Log.i(DCDEBUG, "DB Opened ");
-        } catch (SQLiteException e) {
-            Log.i(DCDEBUG, "Error opening DB: " + e.getMessage());
-            finish();
-        }      
-    }
-    
-    public void getSpinnerValues() {
-    	int i=0;
-        db.beginTransaction();
-
-        try {
-            Cursor curs =  db.rawQuery("SELECT Exercise FROM exerciseTable", null);
-            exerciseList = new String[curs.getCount()];
-            if (curs.moveToFirst()){
-            	do {
-            		String temp = curs.getString(i);
-            		exerciseList[i] = temp;
-            		Log.i(DCDEBUG, "Error opening DB: " + exerciseList[i]);
-                    i++;
-            	} while (curs.moveToNext());
-            }
-            db.setTransactionSuccessful();
-        } catch (SQLException e) {
-            Log.i(DCDEBUG, "Error reading from DB: " + e.getMessage());
-        }
-        finally {
-            db.endTransaction();
-        }
-    }
+  
     
  // next two methods implement the spinner's listener
     @Override
     public void onItemSelected(AdapterView<?> parent, View v, int position, long id) {
-    	//exerciseSpinner.setSelection(position);
-    	
+    	returnExercise = exerciseSpinner.getSelectedItem().toString();
+    	Log.i(DCDEBUG, "Exercise value stored: " + returnExercise);
     }
     @Override
     public void onNothingSelected(AdapterView<?> arg0) {
-    // TODO do nothing – needed by the interface
+    	Toast.makeText(getBaseContext(), "Nothing Selected", Toast.LENGTH_LONG).show();
+    }
+    
+    public void storeValuesToPass() {
+    	returnUser = userView.getText().toString();
+    	Log.i(DCDEBUG, "Exercise value stored: " + returnUser);
+    	returnWeight = Integer.valueOf(weightInput.getText().toString());
+    	Log.i(DCDEBUG, "Exercise value stored: " + returnWeight);
+    	
+    	Intent myIntent = getIntent();
+    	myIntent.putExtra("user", returnUser);
+    	myIntent.putExtra("exer", returnExercise);
+    	myIntent.putExtra("weight", returnWeight);
+    	setResult(Activity.RESULT_OK,myIntent);
     }
     
 }
