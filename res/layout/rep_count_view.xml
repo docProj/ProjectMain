@@ -2,11 +2,11 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent" >
-
+ 
     <RelativeLayout 
        	android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_weight="1" >
+        android:layout_weight="1" >        
         
         <LinearLayout 
         	android:layout_width="match_parent"
@@ -35,9 +35,19 @@
             android:layout_height="wrap_content"
             android:layout_alignParentRight="true"
             android:layout_alignParentBottom="true"
-            android:paddingRight="20dp"
+            android:paddingRight="125dp"
             android:text="Finish Set"
             android:id="@+id/repsToDB" />
+        
+        <Button
+            style="?android:attr/buttonStyleSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentBottom="true"
+            android:paddingRight="10dp"
+            android:text="Finish Session"
+            android:id="@+id/finishSession" />
         
         <TextView
                 android:id="@+id/lastDbRepEntry"
@@ -48,6 +58,13 @@
                 android:paddingRight="20dp"
                 android:textAppearance="?android:attr/textAppearanceLarge"
                 android:textSize="25dp" />
+        
+        <FrameLayout
+	        android:id="@+id/fragment_place"
+	        android:layout_width="match_parent"
+	        android:layout_height="match_parent"
+	        android:layout_weight="1"
+	        android:orientation="vertical" />
         
     </RelativeLayout>
 </LinearLayout>
