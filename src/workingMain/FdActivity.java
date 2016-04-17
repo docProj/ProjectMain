@@ -65,7 +65,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     private String 				   userLifting;
     private String				   exerciseToDo;
     private int					   weightToLift;
-    private int 				   setNumber			= 0;
+    private int 				   setNumber			= 1;
     
     /** Thread to update the number of reps on screen. */
     final Runnable updateRepCountResult = new Runnable() {
@@ -147,7 +147,6 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
                     myDB.setInfoToDB(formattedDate, userLifting, exerciseToDo, weightToLift, setNumber, repCount);
                     myHandler.post(updateLastRepQuery);
                     repCount = 0;
-                    setNumber++;
                 } catch (Exception e) {
                     Log.i(DCDEBUG, "ERROR WITH ONLICK LISTENER: " + e.getMessage());
                 }
@@ -264,6 +263,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     
     public void updateLastSet() {
     	lastDbRepEntry.setText("Set Recorded(#" + setNumber + ") Reps: " + repCount);
+        setNumber++;
     }
     
     /** Calculate and store the screen height and width. */

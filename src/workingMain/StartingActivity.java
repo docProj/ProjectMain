@@ -1,5 +1,7 @@
 package org.opencv.samples.facedetect;
 
+import java.util.ArrayList;
+
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
@@ -15,7 +17,6 @@ import android.widget.Toast;
 
 public class StartingActivity extends Activity implements OnItemSelectedListener {
 	private static final String    DCDEBUG             = "darrynStartingDebug";
-	private String[] 			   exerciseList		   = {"Deadlift","Bicep Curls"};
 	private EditText			   userView;
 	private Spinner				   exerciseSpinner;
 	private EditText			   weightInput;
@@ -23,11 +24,15 @@ public class StartingActivity extends Activity implements OnItemSelectedListener
 	private String				   returnUser;
 	private String				   returnExercise;
 	private int				       returnWeight;
+	private ArrayList<String>	   exerciseList;
+
 	
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.appstart);
+        
+        MyDbHelper myDB = new MyDbHelper(this);
         
         userView = (EditText) findViewById(R.id.userView);
         exerciseSpinner = (Spinner) findViewById(R.id.exerciseSpinner);
@@ -42,6 +47,7 @@ public class StartingActivity extends Activity implements OnItemSelectedListener
             }
         });  
         
+        exerciseList = myDB.returnStoredExercises();
         ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, exerciseList);
         spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         exerciseSpinner.setAdapter(spinnerAdapter); 

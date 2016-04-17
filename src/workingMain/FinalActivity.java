@@ -44,7 +44,7 @@ public class FinalActivity extends Activity {
         ArrayAdapter<String> todayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, currentDayInfo);
         lvDay.setAdapter(todayAdapter);
         
-        finalHistoryTextView.setText("Historical Entries for: " + passedUserName);
+        finalHistoryTextView.setText("Historical Entries for " + passedUserName + ":");
         lvHistory = (ListView) findViewById(R.id.historyList);
         lvHistory.setBackgroundColor(Color.LTGRAY);
         historicalInfo = myDB.returnHistoricalDbData(passedUserName);
