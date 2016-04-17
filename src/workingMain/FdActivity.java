@@ -31,10 +31,6 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.TextView;
 import android.widget.Button;
-import android.database.SQLException;
-import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteException;
-import android.database.Cursor;
 import android.content.Intent;
 
 
@@ -49,7 +45,6 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     private TextView 			   lastDbRepEntry;
     private Button 				   repsToDB;
     private Button 				   finishSession;
-    private SQLiteDatabase 		   db;
 
     private Mat                    mRgba;
     private Mat                    mGray;
@@ -66,8 +61,6 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     final Handler 				   myHandler 			= new Handler();
     private int 				   repCount 			= 0;
     private boolean 			   repTestFlag 			= false;
-    private String 				   repDisplay;
-    private String				   newDate;
     private String 				   formattedDate;
     private String 				   userLifting;
     private String				   exerciseToDo;
@@ -145,12 +138,14 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         mOpenCvCameraView.setCvCameraViewListener(this);
         mOpenCvCameraView.enableFpsMeter();
         
+        final MyDbHelper myDB = new MyDbHelper(this);
+        
         repsToDB.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 try {
-                    insertDbData();
-                    readDbData();
+                    myDB.setInfoToDB(formattedDate, userLifting, exerciseToDo, weightToLift, setNumber, repCount);
+                    myHandler.post(updateLastRepQuery);
                     repCount = 0;
                     setNumber++;
                 } catch (Exception e) {
@@ -166,7 +161,6 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
                 	mGray.release();
                     mRgba.release();
                 	mOpenCvCameraView.disableView();
-                	db.close();
                     Intent finalPage = new Intent(FdActivity.this, FinalActivity.class);
                     finalPage.putExtra("uName", userLifting);
                     finalPage.putExtra("uDate", formattedDate);
@@ -179,9 +173,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         Calendar cal = Calendar.getInstance();
         SimpleDateFormat df = new SimpleDateFormat("dd-MM-yy", Locale.UK);
         formattedDate = df.format(cal.getTime());
-        getScreenHeightWidth();
-        openDatabase();
-        
+        getScreenHeightWidth();        
         Intent startingPage = new Intent(FdActivity.this, StartingActivity.class);
         startActivityForResult(startingPage,111); 
         
@@ -224,113 +216,8 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     }
     
     public void onDestroy() {
-        db.close();
         super.onDestroy();
         mOpenCvCameraView.disableView();
-    }
-
-    /** Open the database, or create it if it does not exist. */
-    public void openDatabase() {
-        try {
-            String SDcardPath = "data/data/org.opencv.samples.facedetect";
-            String DBpath = SDcardPath + "/" + "projectDB.db";
-            Log.i(DCDEBUG, "DB Path: " + DBpath);
-            db = SQLiteDatabase.openDatabase(DBpath, null, SQLiteDatabase.CREATE_IF_NECESSARY);
-            Log.i(DCDEBUG, "DB Opened ");
-            
-         // create the table
-            db.beginTransaction();
-            try {
-                // need to edit XML
-                db.execSQL("create table if not exists repTable("
-                    + "tblID integer PRIMARY KEY autoincrement, "
-                	+ "Date text, "
-                    + "User text, "
-                	+ "Exercise text, "
-                    + "Weight integer, "
-                	+ "SetNumber integer, "
-                    + "Reps integer); ");
-                Log.i(DCDEBUG, "Rep Table created successfully");
-                db.setTransactionSuccessful();    
-            } catch (SQLException e1) {
-                Log.i(DCDEBUG, "Error creating table: " + e1.getMessage());
-                finish();
-            }
-            finally {
-                db.endTransaction();
-            }
-            
-        } catch (SQLiteException e) {
-            Log.i(DCDEBUG, "Error opening DB: " + e.getMessage());
-            finish();
-        }      
-    }
-
-    /** Create the tables if they do not exist in the DB and populate. */
-    public void insertDbData() {
-     
-        db.beginTransaction();
-        try {
-            // need to edit XML
-            db.execSQL("insert into repTable(Date, User, Exercise, Weight, SetNumber, Reps) values "
-            		+ "('"+formattedDate+"',"
-            		+ "'"+userLifting+"',"
-            		+ "'"+exerciseToDo+"',"
-            		+ "'"+weightToLift+"',"
-            		+ "'"+setNumber+"',"
-            		+ "'"+repCount+"');");
-            db.setTransactionSuccessful();
-            Log.i(DCDEBUG, repCount + " inserted into table successfully");
-        } catch (SQLException e2) {
-            Log.i(DCDEBUG, "Error inserting into DB: " + e2.getMessage());
-            finish();
-        }
-        finally {
-            db.endTransaction();
-        }
-    }
-
-    /** Query the DB and run the update thread. */
-    public void readDbData() {
-    	int i=0;
-        db.beginTransaction();
-
-        try {
-            Cursor curs =  db.rawQuery("SELECT * FROM repTable where tblID = (select max(tblID) from repTable)", null);
-            if (curs.moveToFirst()){
-            	do {
-            		newDate = curs.getString(i+1);
-            		setNumber = curs.getInt(i+5);
-                    repDisplay = curs.getString(i+6);
-                    myHandler.post(updateLastRepQuery);
-                    i+=7;
-            	} while (curs.moveToNext());
-            }
-            db.setTransactionSuccessful();
-        } catch (SQLException e) {
-            Log.i(DCDEBUG, "Error reading from DB: " + e.getMessage());
-        }
-        finally {
-            db.endTransaction();
-        }
-    }
-
-    /** Drop the repTable from the DB. */
-    public void dropTable() {
-        // (clean start) action query to drop table
-    	db.beginTransaction();
-        try {
-        	db.execSQL("drop table if exists repTable;");
-            //db.execSQL("drop table if exists exerciseTable;");
-            db.setTransactionSuccessful();
-            Log.i(DCDEBUG, "Table dropped successfully");
-        } catch (Exception e) {
-            Log.i(DCDEBUG, "Table dropped error: " + e.getMessage());
-            finish(); 
-        }
-        finally {
-            db.endTransaction();
-        }
     }
 
     public void onCameraViewStarted(int width, int height) {
@@ -376,8 +263,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     }
     
     public void updateLastSet() {
-    	lastDbRepEntry.setText("Date: " + newDate + " Set: #" + setNumber + " Reps: " + repDisplay);
-    	//lastDbRepEntry.setText("User: " + userLifting + " Exercise: #" + exerciseToDo + " Weight: " + weightToLift + "kg");
+    	lastDbRepEntry.setText("Set Recorded(#" + setNumber + ") Reps: " + repCount);
     }
     
     /** Calculate and store the screen height and width. */

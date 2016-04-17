@@ -47,9 +47,7 @@ public class StartingActivity extends Activity implements OnItemSelectedListener
         exerciseSpinner.setAdapter(spinnerAdapter); 
         exerciseSpinner.setOnItemSelectedListener(this);
     }
-  
     
- // next two methods implement the spinner's listener
     @Override
     public void onItemSelected(AdapterView<?> parent, View v, int position, long id) {
     	returnExercise = exerciseSpinner.getSelectedItem().toString();

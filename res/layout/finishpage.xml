@@ -1,34 +1,38 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
-    android:layout_height="match_parent" 
-    tools:context=".MainActivity">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/LinearLayout1"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".MainActivity" >
 
     <TextView
+        android:id="@+id/finalDayTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Good Job!"
-        android:id="@+id/finalTextView"
-        android:layout_below="@+id/textView"
-        android:layout_centerHorizontal="true"
-        android:textSize="35dp"
-        android:textColor="#ff16ff01" />
-
-    <ScrollView
-        android:id="@+id/scrollView"
+        android:text="Day Summary:"
+        android:textColor="#ff16ff01"
+        android:textSize="35sp" />
+    
+    <ListView
+        android:id="@+id/dayList"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.21" >
+    </ListView>
+    
+    <TextView
+        android:id="@+id/finalHistoryTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentRight="true" >
-
-    </ScrollView>
+        android:text="Historical:"
+        android:textColor="#ff16ff01"
+        android:textSize="35sp" />
 
     <ListView
-        android:id="@+id/listView1"
+        android:id="@+id/historyList"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_below="@+id/finalTextView" >
+        android:layout_height="118dp" >
     </ListView>
 
-</RelativeLayout>
+</LinearLayout>
