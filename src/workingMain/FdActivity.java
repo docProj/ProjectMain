@@ -168,6 +168,8 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
                 	mOpenCvCameraView.disableView();
                 	db.close();
                     Intent finalPage = new Intent(FdActivity.this, FinalActivity.class);
+                    finalPage.putExtra("uName", userLifting);
+                    finalPage.putExtra("uDate", formattedDate);
                     startActivity(finalPage);                    
                 } catch (Exception e) {
                     Log.i(DCDEBUG, "ERROR WITH ONLICK STARTING FINAL ACTIVITY LISTENER: " + e.getMessage());
