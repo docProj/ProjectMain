@@ -27,6 +27,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.TextView;
@@ -41,6 +43,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     private static final Scalar    DETECT_RECT_COLOR   = new Scalar(255, 0, 0, 255);	// Red
     private static final Scalar    LINE_COLOR     	   = new Scalar(0, 0, 255, 255);	// Green
 
+    private MenuItem			   lineDisplay;
     private TextView 			   numberOfRepsText;
     private TextView 			   lastDbRepEntry;
     private Button 				   repsToDB;
@@ -54,9 +57,10 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
 
     private Point				   p1;
     private Point				   p2;
-    private int					   lineSet				= 600;
     private int 				   screenHeight;
     private int 				   screenWidth;
+    private int					   lineSet				= 600;
+    private boolean				   lineShow				= true;
     
     final Handler 				   myHandler 			= new Handler();
     private int 				   repCount 			= 0;
@@ -91,9 +95,9 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
 
                     try {
                         // load cascade file from application resources
-                        InputStream is = getResources().openRawResource(R.raw.lbpcascade_weightplate2);
+                        InputStream is = getResources().openRawResource(R.raw.lbpcascade_weightplate4);
                         File cascadeDir = getDir("cascade", Context.MODE_PRIVATE);
-                        mCascadeFile = new File(cascadeDir, "lbpcascade_weightplate5.xml");
+                        mCascadeFile = new File(cascadeDir, "lbpcascade_weightplate4.xml");
                         FileOutputStream os = new FileOutputStream(mCascadeFile);
 
                         byte[] buffer = new byte[4096];
@@ -146,7 +150,6 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
                 try {
                     myDB.setInfoToDB(formattedDate, userLifting, exerciseToDo, weightToLift, setNumber, repCount);
                     myHandler.post(updateLastRepQuery);
-                    repCount = 0;
                 } catch (Exception e) {
                     Log.i(DCDEBUG, "ERROR WITH ONLICK LISTENER: " + e.getMessage());
                 }
@@ -172,10 +175,8 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         Calendar cal = Calendar.getInstance();
         SimpleDateFormat df = new SimpleDateFormat("dd-MM-yy", Locale.UK);
         formattedDate = df.format(cal.getTime());
-        getScreenHeightWidth();        
         Intent startingPage = new Intent(FdActivity.this, StartingActivity.class);
         startActivityForResult(startingPage,111); 
-        
     }
     
     @Override
@@ -187,6 +188,12 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     			userLifting = userInputReceived.getString("user");
     			exerciseToDo = userInputReceived.getString("exer");
     			weightToLift = userInputReceived.getInt("weight");
+    			if(exerciseToDo.equals("Deadlift"))
+    				lineSet = 600;
+    			else if(exerciseToDo.equals("Bicep Curls"))
+    				lineSet = 700;
+    	        getScreenHeightWidth();        
+    			Log.i(DCDEBUG, "LineSet to: " + lineSet);
     			Log.i(DCDEBUG, "Returned Values: " + userLifting + ", " + exerciseToDo + ", " + weightToLift);
     		}
     	} catch (Exception e) {
@@ -196,7 +203,6 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
 
     @Override
     public void onPause() {
-    	//dropTable();
         super.onPause();
         if (mOpenCvCameraView != null)
             mOpenCvCameraView.disableView();
@@ -218,6 +224,21 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         super.onDestroy();
         mOpenCvCameraView.disableView();
     }
+    
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        Log.d(TAG, "called onCreateOptionsMenu");
+        lineDisplay = menu.add("Line Display");
+		return true;
+    }
+    
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        Log.i(TAG, "called onOptionsItemSelected; selected item: " + item);
+        if (item == lineDisplay)
+            lineShow = !lineShow;
+        return true;
+    }
 
     public void onCameraViewStarted(int width, int height) {
         mGray = new Mat();
@@ -230,16 +251,15 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     }
 
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
+    	    	
         mRgba = inputFrame.rgba();
         mGray = inputFrame.gray();
 
         MatOfRect detectedObj = new MatOfRect();
-        if (mNativeDetector != null)
-                mNativeDetector.detect(mGray, detectedObj);
-        else 
-            Log.e(TAG, "Detection method is not selected!");
+        mNativeDetector.detect(mGray, detectedObj);
         
-    	Imgproc.line(mRgba, p1, p2, LINE_COLOR,8);
+        if(lineShow)
+        	Imgproc.line(mRgba, p1, p2, LINE_COLOR,8);
         
         Rect[] detObjArray = detectedObj.toArray();
         for (int i = 0; i < detObjArray.length; i++){
@@ -264,6 +284,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     public void updateLastSet() {
     	lastDbRepEntry.setText("Set Recorded(#" + setNumber + ") Reps: " + repCount);
         setNumber++;
+        repCount = 0;
     }
     
     /** Calculate and store the screen height and width. */
@@ -272,7 +293,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
         screenHeight = metrics.heightPixels;
         screenWidth = metrics.widthPixels;
-        p1 = new Point(0,screenHeight-lineSet);
+		p1 = new Point(0,screenHeight-lineSet);
         p2 = new Point(screenWidth,screenHeight-lineSet);
     }
 }
