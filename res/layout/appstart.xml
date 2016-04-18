@@ -29,7 +29,8 @@
                 android:layout_weight="0.00"
                 android:spinnerMode="dropdown" 
                 android:hint="Who is lifting ?" 
-                android:inputType="textCapWords|textAutoCorrect" />   
+                android:inputType="textCapWords|textAutoCorrect"
+                android:imeOptions="flagNoExtractUi" />   
         
         <Spinner
                 android:layout_width="match_parent"
@@ -45,7 +46,8 @@
                 android:id="@+id/weightInput" 
                 android:layout_gravity="center_horizontal" 
                 android:layout_weight="0.08"
-                android:hint="Weight in KG"/>
+                android:hint="Weight in KG" 
+                android:imeOptions="flagNoExtractUi" />
 
         <Button
             android:id="@+id/startOpenCV"
