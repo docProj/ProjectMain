@@ -10,8 +10,6 @@
         android:id="@+id/finalDayTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Day Summary:"
-        android:textColor="#ff16ff01"
         android:textSize="20sp" />
     
     <ListView
@@ -25,8 +23,6 @@
         android:id="@+id/finalHistoryTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Historical:"
-        android:textColor="#ff16ff01"
         android:textSize="20sp" />
 
     <ListView
