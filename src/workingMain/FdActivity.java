@@ -12,6 +12,7 @@ import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
+import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfRect;
 import org.opencv.core.Point;
@@ -43,7 +44,8 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     private static final Scalar    DETECT_RECT_COLOR   = new Scalar(255, 0, 0, 255);	// Red
     private static final Scalar    LINE_COLOR     	   = new Scalar(0, 0, 255, 255);	// Green
 
-    private MenuItem			   lineDisplay;
+    private MenuItem			   menuItemlineDisplay;
+    private MenuItem			   menuItemChangeCamera;
     private TextView 			   numberOfRepsText;
     private TextView 			   lastDbRepEntry;
     private Button 				   repsToDB;
@@ -54,7 +56,8 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     private File                   mCascadeFile;
     private DetectionBasedTracker  mNativeDetector;
     private CameraBridgeViewBase   mOpenCvCameraView;
-
+    private boolean				   camChange			=true;
+    
     private Point				   p1;
     private Point				   p2;
     private int 				   screenHeight;
@@ -228,15 +231,29 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         Log.d(TAG, "called onCreateOptionsMenu");
-        lineDisplay = menu.add("Line Display");
+        menuItemlineDisplay = menu.add("Line Display");
+        menuItemChangeCamera = menu.add("Swap Camera");
 		return true;
     }
     
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         Log.i(TAG, "called onOptionsItemSelected; selected item: " + item);
-        if (item == lineDisplay)
+        if (item == menuItemlineDisplay)
             lineShow = !lineShow;
+        if(item == menuItemChangeCamera){
+        	camChange = !camChange;
+        	if(camChange == false){
+        		mOpenCvCameraView.disableView();
+                mOpenCvCameraView.setCameraIndex(1);
+                mOpenCvCameraView.enableView();
+        	}
+        	else {
+        		mOpenCvCameraView.disableView();
+                mOpenCvCameraView.setCameraIndex(0);
+                mOpenCvCameraView.enableView();
+        	}
+        }
         return true;
     }
 
@@ -255,6 +272,11 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         mRgba = inputFrame.rgba();
         mGray = inputFrame.gray();
 
+        if(!camChange){
+        	Core.flip(mRgba, mRgba, 1);
+        	Core.flip(mGray, mGray, 1);
+        }
+        
         MatOfRect detectedObj = new MatOfRect();
         mNativeDetector.detect(mGray, detectedObj);
         
