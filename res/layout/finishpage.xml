@@ -6,6 +6,12 @@
     android:orientation="vertical"
     tools:context=".MainActivity" >
 
+    <fragment android:layout_height="match_parent"
+              android:layout_width="match_parent"
+        	  class="org.opencv.samples.facedetect.HistoricalInfoFragment"
+              android:id="@+id/historyFragment"
+              android:layout_weight="1" />
+    
     <TextView
         android:id="@+id/finalDayTextView"
         android:layout_width="wrap_content"
@@ -18,17 +24,17 @@
         android:layout_height="0dp"
         android:layout_weight="0.21" >
     </ListView>
-    
-    <TextView
-        android:id="@+id/finalHistoryTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textSize="20sp" />
 
-    <ListView
-        android:id="@+id/historyList"
+    <RelativeLayout 
         android:layout_width="match_parent"
-        android:layout_height="118dp" >
-    </ListView>
+        android:layout_height="wrap_content" >
+    
+	        <Button
+	        android:id="@+id/historyButton"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:layout_alignParentRight="true"
+	        android:text="View Historical" />
+    </RelativeLayout>
 
 </LinearLayout>
