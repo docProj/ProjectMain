@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Final Year Project</string>
+    <string name="app_name">Weight Training</string>
+    <string name="userName">User Exercising:</string>
+    <string name="userExercise">Exercise:</string>
+    <string name="userWeight">Weight Being Used(kg):</string>
+    <string name="readyButton">Get Started</string>
 </resources>

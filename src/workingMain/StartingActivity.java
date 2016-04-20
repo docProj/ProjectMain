@@ -29,6 +29,7 @@ public class StartingActivity extends Activity implements OnItemSelectedListener
 	
     @Override
     public void onCreate(Bundle savedInstanceState) {
+    	setTheme(android.R.style.Theme_Material_Light_NoActionBar);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.appstart);
         
@@ -42,13 +43,18 @@ public class StartingActivity extends Activity implements OnItemSelectedListener
         startOpenCV.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-            	storeValuesToPass();
-                finish();
+            	if(userView.getText().toString().equals("") || weightInput.getText().toString().equals("")) {
+            		Toast.makeText(getApplicationContext(), "You must enter values for both the User and Weight being lifted!", Toast.LENGTH_LONG).show();
+            	}
+            	else {
+            		storeValuesToPass();
+            		finish();
+            	}
             }
         });  
         
         exerciseList = myDB.returnStoredExercises();
-        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, exerciseList);
+        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, exerciseList);
         spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         exerciseSpinner.setAdapter(spinnerAdapter); 
         exerciseSpinner.setOnItemSelectedListener(this);
