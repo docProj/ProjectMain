@@ -5,7 +5,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 import java.util.Locale;
 
 import org.opencv.android.BaseLoaderCallback;
@@ -13,7 +15,9 @@ import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Core;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfRect;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
@@ -21,6 +25,8 @@ import org.opencv.core.Scalar;
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
 import org.opencv.imgproc.Imgproc;
+import org.opencv.video.BackgroundSubtractorMOG2;
+import org.opencv.video.Video;
 
 import android.app.Activity;
 import android.content.Context;
@@ -46,6 +52,9 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
 
     private MenuItem			   menuItemlineDisplay;
     private MenuItem			   menuItemChangeCamera;
+    private MenuItem			   menuItemCamMode1;
+    private MenuItem			   menuItemCamMode2;
+    private MenuItem			   menuItemCamMode3;
     private TextView 			   numberOfRepsText;
     private TextView 			   lastDbRepEntry;
     private Button 				   repsToDB;
@@ -58,12 +67,16 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     private CameraBridgeViewBase   mOpenCvCameraView;
     private boolean				   camChange			=true;
     
+    private Mat 				   mFGMask;
+    private BackgroundSubtractorMOG2 backsub;
+    
     private Point				   p1;
     private Point				   p2;
     private int 				   screenHeight;
     private int 				   screenWidth;
-    private int					   lineSet				= 600;
+    private int					   lineSet;
     private boolean				   lineShow				= true;
+    private int					   operatingMode        = 1;
     
     final Handler 				   myHandler 			= new Handler();
     private int 				   repCount 			= 0;
@@ -233,6 +246,9 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         Log.d(TAG, "called onCreateOptionsMenu");
         menuItemlineDisplay = menu.add("Line Display");
         menuItemChangeCamera = menu.add("Swap Camera");
+        menuItemCamMode1 = menu.add("Mode 1 (Default)");
+        menuItemCamMode2 = menu.add("Mode 2");
+        menuItemCamMode3 = menu.add("Mode 3");
 		return true;
     }
     
@@ -241,7 +257,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         Log.i(TAG, "called onOptionsItemSelected; selected item: " + item);
         if (item == menuItemlineDisplay)
             lineShow = !lineShow;
-        if(item == menuItemChangeCamera){
+        else if(item == menuItemChangeCamera){
         	camChange = !camChange;
         	if(camChange == false){
         		mOpenCvCameraView.disableView();
@@ -254,17 +270,26 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
                 mOpenCvCameraView.enableView();
         	}
         }
+        else if(item == menuItemCamMode1)
+        	operatingMode = 1;
+        else if(item == menuItemCamMode2)
+        	operatingMode = 2;
+        else if(item == menuItemCamMode3)
+        	operatingMode = 3;
         return true;
     }
 
     public void onCameraViewStarted(int width, int height) {
         mGray = new Mat();
         mRgba = new Mat();
+        mFGMask = new Mat();
+        backsub = Video.createBackgroundSubtractorMOG2();
     }
 
     public void onCameraViewStopped() {
         mGray.release();
         mRgba.release();
+        mFGMask.release();
     }
 
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
@@ -276,25 +301,38 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         	Core.flip(mRgba, mRgba, 1);
         	Core.flip(mGray, mGray, 1);
         }
-        
-        MatOfRect detectedObj = new MatOfRect();
-        mNativeDetector.detect(mGray, detectedObj);
-        
         if(lineShow)
         	Imgproc.line(mRgba, p1, p2, LINE_COLOR,8);
         
-        Rect[] detObjArray = detectedObj.toArray();
-        for (int i = 0; i < detObjArray.length; i++){
-        	Point centerRec = new Point((detObjArray[i].tl().x+detObjArray[i].br().x)/2,(detObjArray[i].tl().y+detObjArray[i].br().y)/2);
-            Imgproc.rectangle(mRgba, detObjArray[i].tl(), detObjArray[i].br(), DETECT_RECT_COLOR, 3); 
-            if(centerRec.y < p1.y && repTestFlag == false){
-            	repCount++;
-            	repTestFlag = true;
+        switch(operatingMode){
+        case 1:
+        	MatOfRect detectedObj = new MatOfRect();
+            mNativeDetector.detect(mGray, detectedObj);
+            
+            Rect[] detObjArray = detectedObj.toArray();
+            for (int i = 0; i < detObjArray.length; i++){
+            	Point centerRec = new Point((detObjArray[i].tl().x+detObjArray[i].br().x)/2,(detObjArray[i].tl().y+detObjArray[i].br().y)/2);
+                Imgproc.rectangle(mRgba, detObjArray[i].tl(), detObjArray[i].br(), DETECT_RECT_COLOR, 3); 
+                if(centerRec.y < p1.y && repTestFlag == false){
+                	repCount++;
+                	repTestFlag = true;
+                }
+                if(centerRec.y > p1.y+detObjArray[i].height/2)
+                	repTestFlag = false;
             }
-            if(centerRec.y > p1.y+detObjArray[i].height/2)
-            	repTestFlag = false;
+            myHandler.post(updateRepCountResult);
+        	break;
+        case 2:
+        	
+        	break;
+        case 3:
+        	lineShow = false;
+        	backsub.apply(mRgba, mFGMask, 0.1);
+        	Imgproc.cvtColor(mFGMask, mRgba, Imgproc.COLOR_GRAY2BGRA, 4);
+        	break;
+        default:
+        	break;
         }
-        myHandler.post(updateRepCountResult);
         return mRgba;
     }
     
