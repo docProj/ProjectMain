@@ -5,9 +5,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.List;
 import java.util.Locale;
 
 import org.opencv.android.BaseLoaderCallback;
@@ -15,9 +13,7 @@ import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Core;
-import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfRect;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
@@ -191,8 +187,13 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         Calendar cal = Calendar.getInstance();
         SimpleDateFormat df = new SimpleDateFormat("dd-MM-yy", Locale.UK);
         formattedDate = df.format(cal.getTime());
+     
         Intent startingPage = new Intent(FdActivity.this, StartingActivity.class);
         startActivityForResult(startingPage,111); 
+        Intent appOpen = new Intent(FdActivity.this, OpeningActivity.class);
+        startActivity(appOpen);
+        
+       
     }
     
     @Override
