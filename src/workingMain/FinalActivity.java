@@ -3,7 +3,6 @@ package org.opencv.samples.facedetect;
 import java.util.ArrayList;
 
 import android.app.Activity;
-import android.app.Fragment;
 import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.graphics.Color;
@@ -14,19 +13,18 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 public class FinalActivity extends Activity {
 	private static final String    DCDEBUG             = "darrynFinishingDebug";
-	private String passedUserName;
-	private String passedDate;
-	TextView finalDayTextView;
-	//TextView finalHistoryTextView;
+	private String 				   passedUserName;
+	private String 				   passedDate;
+	TextView 					   finalDayTextView;
 	Button 				   		   historyButton;
+	Button 						   newSession;
 	ListView 					   lvDay;
-	//ListView 					   lvHistory;
 	ArrayList<String> 			   currentDayInfo;
-	ArrayList<String>			   historicalInfo;
+	FragmentTransaction 		   ft;
+	HistoricalInfoFragment         hInfoFrag;
 
 	
     @Override
@@ -35,19 +33,24 @@ public class FinalActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.finishpage);
         finalDayTextView = (TextView) findViewById(R.id.finalDayTextView);
-        //finalHistoryTextView = (TextView) findViewById(R.id.finalHistoryTextView);
         historyButton = (Button) findViewById(R.id.historyButton);
-        
         historyButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-        		//Toast.makeText(getApplicationContext(), "WORK IN PROGRESS!", Toast.LENGTH_LONG).show();
-        		Fragment frag = new HistoricalInfoFragment();
-        		FragmentTransaction ft = getFragmentManager().beginTransaction();
-        		ft.replace(R.id.LinearLayout1, frag);
+        		ft = getFragmentManager().beginTransaction();
+        		hInfoFrag = HistoricalInfoFragment.newInstance("test");
+        		ft.replace(R.id.fragmentHolder, hInfoFrag);
         		ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
-        		//ft.addToBackStack(null);
         		ft.commit();
+            }
+        }); 
+        
+        newSession = (Button) findViewById(R.id.newSession);
+        newSession.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+            	Intent restart = new Intent(FinalActivity.this, StartingActivity.class);
+                startActivity(restart); 
             }
         }); 
         
@@ -60,7 +63,7 @@ public class FinalActivity extends Activity {
         	Log.d(DCDEBUG, "User name received: " + passedUserName + " and the date " + passedDate);
         }
         
-        finalDayTextView.setText("Summary for " + passedUserName + " for today(" + passedDate + ").");
+        finalDayTextView.setText(passedUserName + "'s summary for today(" + passedDate + ").");
         lvDay = (ListView) findViewById(R.id.dayList);
         lvDay.setBackgroundColor(Color.LTGRAY);
         currentDayInfo = myDB.returnCurrentDayDbData(passedUserName, passedDate);
