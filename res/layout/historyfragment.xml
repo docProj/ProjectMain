@@ -5,17 +5,32 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     tools:context=".MainActivity" >
-    
+
     <TextView
         android:id="@+id/finalHistoryTextView"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textSize="20sp" />
 
     <ListView
         android:id="@+id/historyList"
         android:layout_width="match_parent"
-        android:layout_height="118dp" >
+        android:layout_height="82dp" >
     </ListView>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.28" >
+
+        <Button
+            android:id="@+id/returnButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentTop="true"
+            android:text="Return" />
+
+    </RelativeLayout>
 
 </LinearLayout>
