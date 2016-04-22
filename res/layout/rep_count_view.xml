@@ -30,7 +30,7 @@
                 android:textSize="25dp" />
         
         <Button
-            style="?android:attr/buttonStyleSmall"
+            style="android.R.style.Theme_Material_Light_NoActionBar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentRight="true"
@@ -40,7 +40,7 @@
             android:id="@+id/repsToDB" />
         
         <Button
-            style="?android:attr/buttonStyleSmall"
+            style="android.R.style.Theme_Material_Light_NoActionBar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentRight="true"

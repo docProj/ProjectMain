@@ -44,7 +44,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     private static final String    TAG                 = "Project::MainActivity";
     private static final String    DCDEBUG             = "darrynDebug";
     private static final Scalar    DETECT_RECT_COLOR   = new Scalar(255, 0, 0, 255);	// Red
-    private static final Scalar    LINE_COLOR     	   = new Scalar(0, 0, 255, 255);	// Green
+    private static final Scalar    ROI_LINE_COLOR      = new Scalar(0, 0, 255, 255);	// Green
 
     private MenuItem			   menuItemlineDisplay;
     private MenuItem			   menuItemChangeCamera;
@@ -107,9 +107,9 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
 
                     try {
                         // load cascade file from application resources
-                        InputStream is = getResources().openRawResource(R.raw.lbpcascade_weightplate4);
+                        InputStream is = getResources().openRawResource(R.raw.lbpcascade_weightplate6_5);
                         File cascadeDir = getDir("cascade", Context.MODE_PRIVATE);
-                        mCascadeFile = new File(cascadeDir, "lbpcascade_weightplate4.xml");
+                        mCascadeFile = new File(cascadeDir, "lbpcascade_weightplate6_5.xml");
                         FileOutputStream os = new FileOutputStream(mCascadeFile);
 
                         byte[] buffer = new byte[4096];
@@ -143,6 +143,12 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         Log.i(TAG, "called onCreate");
         super.onCreate(savedInstanceState);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        
+        Intent startingPage = new Intent(FdActivity.this, StartingActivity.class);
+        startActivityForResult(startingPage,111); 
+        Intent appOpen = new Intent(FdActivity.this, OpeningActivity.class);
+        startActivity(appOpen);
+        
         setContentView(R.layout.rep_count_view);
         numberOfRepsText =(TextView) findViewById(R.id.numberOfReps);
         lastDbRepEntry =(TextView) findViewById(R.id.lastDbRepEntry);
@@ -186,14 +192,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         });  
         Calendar cal = Calendar.getInstance();
         SimpleDateFormat df = new SimpleDateFormat("dd-MM-yy", Locale.UK);
-        formattedDate = df.format(cal.getTime());
-     
-        Intent startingPage = new Intent(FdActivity.this, StartingActivity.class);
-        startActivityForResult(startingPage,111); 
-        Intent appOpen = new Intent(FdActivity.this, OpeningActivity.class);
-        startActivity(appOpen);
-        
-       
+        formattedDate = df.format(cal.getTime());   
     }
     
     @Override
@@ -294,7 +293,6 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     }
 
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
-    	    	
         mRgba = inputFrame.rgba();
         mGray = inputFrame.gray();
 
@@ -303,7 +301,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         	Core.flip(mGray, mGray, 1);
         }
         if(lineShow)
-        	Imgproc.line(mRgba, p1, p2, LINE_COLOR,8);
+        	Imgproc.line(mRgba, p1, p2, ROI_LINE_COLOR,8);
         
         switch(operatingMode){
         case 1:

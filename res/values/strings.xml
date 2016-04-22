@@ -5,4 +5,7 @@
     <string name="userExercise">Exercise:</string>
     <string name="userWeight">Weight Being Used(kg):</string>
     <string name="readyButton">Get Started</string>
+    <string name="viewHistorical">View Historical</string>
+    <string name="newSess">New Session</string>
+    <string name="returnButton">Return</string>
 </resources>
