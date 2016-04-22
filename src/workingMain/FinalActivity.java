@@ -38,9 +38,10 @@ public class FinalActivity extends Activity {
             @Override
             public void onClick(View v) {
         		ft = getFragmentManager().beginTransaction();
-        		hInfoFrag = HistoricalInfoFragment.newInstance("test");
-        		ft.replace(R.id.fragmentHolder, hInfoFrag);
+        		hInfoFrag = HistoricalInfoFragment.newInstance(passedUserName);
+        		ft.replace(R.id.finalPageLayout, hInfoFrag);
         		ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
+        		ft.addToBackStack(null);
         		ft.commit();
             }
         }); 
@@ -70,14 +71,7 @@ public class FinalActivity extends Activity {
         ArrayAdapter<String> todayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, currentDayInfo);
         lvDay.setAdapter(todayAdapter);
         Log.d(DCDEBUG, "Current day data set successfully");
-        
-//        finalHistoryTextView.setText("Historical Entries for " + passedUserName + ":");
-//        lvHistory = (ListView) findViewById(R.id.historyList);
-//        lvHistory.setBackgroundColor(Color.LTGRAY);
-//        historicalInfo = myDB.returnHistoricalDbData(passedUserName);
-//        ArrayAdapter<String> historyAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, historicalInfo);
-//        lvHistory.setAdapter(historyAdapter);
-//        Log.d(DCDEBUG, "Historical data set successfully");
+
     }
     
     @Override

@@ -9,7 +9,6 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -21,22 +20,21 @@ public class HistoricalInfoFragment extends Fragment {
 	Context context = null;
 	TextView finalHistoryTextView;
 	Button returnButton;
-	ArrayList<String> historicalInfo;
-	
-	private String items[] = { "Text-on-Line-00" };
+	private static String passedUser;
+	ArrayList<String> historicalInfo;	
 	
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		
-		// instead of an XML spec, this view is created with code
 		LinearLayout fragLayout = (LinearLayout) inflater.inflate(R.layout.historyfragment, null);
 
 		finalHistoryTextView = (TextView) fragLayout.findViewById(R.id.finalHistoryTextView);
-		finalHistoryTextView.setText("TEST");
+		finalHistoryTextView.setText("Historical Entries for " + passedUser +":");
+		
 		ListView historyList = (ListView) fragLayout.findViewById(R.id.historyList);
 		historyList.setBackgroundColor(Color.LTGRAY);
-
-		ArrayAdapter<String> historyAdapter = new ArrayAdapter<String>(context,
-				android.R.layout.simple_list_item_1, items);
+		MyDbHelper myDB = new MyDbHelper(finalAct);
+		historicalInfo = myDB.returnHistoricalDbData(passedUser);
+		ArrayAdapter<String> historyAdapter = new ArrayAdapter<String>(context, android.R.layout.simple_list_item_1, historicalInfo);
 		historyList.setAdapter(historyAdapter);
 		
 		returnButton = (Button) fragLayout.findViewById(R.id.returnButton);
@@ -58,9 +56,7 @@ public class HistoricalInfoFragment extends Fragment {
 
 	public static HistoricalInfoFragment newInstance(String string) {
 		HistoricalInfoFragment fragment = new HistoricalInfoFragment();
-		Bundle args = new Bundle();
-		args.putString("test", string);
-		fragment.setArguments(args);
+		passedUser = string;
 		return fragment;
 	}
 	
@@ -70,12 +66,9 @@ public class HistoricalInfoFragment extends Fragment {
 		try {
 			context = getActivity();
 			finalAct = (FinalActivity) getActivity();
-			getActivity().getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+			
 		} catch (IllegalStateException e) {
-			throw new IllegalStateException(
-					"FinalActivity must implement callbacks");
+			throw new IllegalStateException("ILLEGAL STATE EXCEPTION");
 		}
 	}
-	
-
 }
