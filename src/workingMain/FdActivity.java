@@ -61,7 +61,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     private File                   mCascadeFile;
     private DetectionBasedTracker  mNativeDetector;
     private CameraBridgeViewBase   mOpenCvCameraView;
-    private boolean				   camChange			=true;
+    private boolean				   camChange			=false;
     
     private Mat 				   mFGMask;
     private BackgroundSubtractorMOG2 backsub;
@@ -82,6 +82,8 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     private String				   exerciseToDo;
     private int					   weightToLift;
     private int 				   setNumber			= 1;
+    
+    private boolean				   newSession			= false;
     
     /** Thread to update the number of reps on screen. */
     final Runnable updateRepCountResult = new Runnable() {
@@ -146,8 +148,6 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         
         Intent startingPage = new Intent(FdActivity.this, StartingActivity.class);
         startActivityForResult(startingPage,111); 
-        Intent appOpen = new Intent(FdActivity.this, OpeningActivity.class);
-        startActivity(appOpen);
         
         setContentView(R.layout.rep_count_view);
         numberOfRepsText =(TextView) findViewById(R.id.numberOfReps);
@@ -159,6 +159,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         mOpenCvCameraView.setMaxFrameSize(1280, 720);
         mOpenCvCameraView.setCvCameraViewListener(this);
         mOpenCvCameraView.enableFpsMeter();
+        mOpenCvCameraView.setCameraIndex(1);
         
         final MyDbHelper myDB = new MyDbHelper(this);
         
@@ -177,6 +178,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
             @Override
             public void onClick(View v) {
                 try {
+                	newSession = true;
                 	setNumber = 1;
                 	mGray.release();
                     mRgba.release();
@@ -227,12 +229,17 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     @Override
     public void onResume() {
         super.onResume();
-        if (!OpenCVLoader.initDebug()) {
-            Log.d(TAG, "Internal OpenCV library not found. Using OpenCV Manager for initialization");
-            OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_0_0, this, mLoaderCallback);
-        } else {
-            Log.d(TAG, "OpenCV library found inside package. Using it!");
-            mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
+        if(newSession == true){
+        	recreate();
+        }
+        else {
+	        if (!OpenCVLoader.initDebug()) {
+	            Log.d(TAG, "Internal OpenCV library not found. Using OpenCV Manager for initialization");
+	            OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_0_0, this, mLoaderCallback);
+	        } else {
+	            Log.d(TAG, "OpenCV library found inside package. Using it!");
+	            mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
+	        }
         }
     }
     

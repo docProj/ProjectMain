@@ -33,6 +33,9 @@ public class StartingActivity extends Activity implements OnItemSelectedListener
         super.onCreate(savedInstanceState);
         setContentView(R.layout.appstart);
         
+	    Intent appOpening = new Intent(StartingActivity.this, OpeningActivity.class);
+	    startActivity(appOpening);
+        
         MyDbHelper myDB = new MyDbHelper(this);
         
         userView = (EditText) findViewById(R.id.userView);
@@ -58,6 +61,11 @@ public class StartingActivity extends Activity implements OnItemSelectedListener
         spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         exerciseSpinner.setAdapter(spinnerAdapter); 
         exerciseSpinner.setOnItemSelectedListener(this);
+    }
+    
+    @Override
+    public void onResume() {
+    	super.onResume();
     }
     
     @Override

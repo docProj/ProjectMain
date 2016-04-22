@@ -50,8 +50,9 @@ public class FinalActivity extends Activity {
         newSession.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-            	Intent restart = new Intent(FinalActivity.this, StartingActivity.class);
-                startActivity(restart); 
+//            	Intent restart = new Intent(FinalActivity.this, StartingActivity.class);
+//                startActivity(restart); 
+            	finish();
             }
         }); 
         
