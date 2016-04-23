@@ -12,7 +12,7 @@ public class MyDbHelper extends SQLiteOpenHelper {
 	
 	private static final String DEBUGGING             	= "DBdebugging";
 	private static final String dbName 					= "projectDB";
-	private static final int    dbVersion 				= 11;
+	private static final int    dbVersion 				= 12;
 	private static final String repTableName 			= "repTable";
 	private static final String exerTableName 			= "exerTable";
 	// Table Columns
@@ -56,7 +56,7 @@ public class MyDbHelper extends SQLiteOpenHelper {
 					exertblValID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
 					exertblValList + " TEXT" + 
 				");";
-		String enterExercises = "INSERT INTO " + exerTableName + "(" + exertblValList + ") VALUES ('Deadlift'),('Bicep Curls');";
+		String enterExercises = "INSERT INTO " + exerTableName + "(" + exertblValList + ") VALUES ('Squat'),('Bicep Curls');";
 		db.execSQL(createRepTable);
 		db.execSQL(createExerciseTable);
 		db.execSQL(enterExercises);

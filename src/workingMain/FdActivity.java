@@ -44,7 +44,8 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     private static final String    TAG                 = "Project::MainActivity";
     private static final String    DCDEBUG             = "darrynDebug";
     private static final Scalar    DETECT_RECT_COLOR   = new Scalar(255, 0, 0, 255);	// Red
-    private static final Scalar    ROI_LINE_COLOR      = new Scalar(0, 0, 255, 255);	// Green
+    private static final Scalar    DETECT_PERSON_COLOR = new Scalar(0, 255, 0, 255);	// Green
+    private static final Scalar    ROI_LINE_COLOR      = new Scalar(0, 0, 255, 255);	// Blue
 
     private MenuItem			   menuItemlineDisplay;
     private MenuItem			   menuItemChangeCamera;
@@ -59,7 +60,8 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     private Mat                    mRgba;
     private Mat                    mGray;
     private File                   mCascadeFile;
-    private DetectionBasedTracker  mNativeDetector;
+    private DetectionBasedTracker  mNativeWeightDetector;
+    private DetectionBasedTracker  mNativePersonDetector;
     private CameraBridgeViewBase   mOpenCvCameraView;
     private boolean				   camChange			=false;
     
@@ -122,7 +124,23 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
                         is.close();
                         os.close();
 
-                        mNativeDetector = new DetectionBasedTracker(mCascadeFile.getAbsolutePath(), 0);
+                        mNativeWeightDetector = new DetectionBasedTracker(mCascadeFile.getAbsolutePath(), 0);
+                        cascadeDir.delete();
+                        
+                        is = getResources().openRawResource(R.raw.haarcascade_fullbody);
+                        cascadeDir = getDir("cascade", Context.MODE_PRIVATE);
+                        mCascadeFile = new File(cascadeDir, "haarcascade_fullbody.xml");
+                        os = new FileOutputStream(mCascadeFile);
+
+                        buffer = new byte[4096];
+                        int bytesRead2;
+                        while ((bytesRead2 = is.read(buffer)) != -1) {
+                            os.write(buffer, 0, bytesRead2);
+                        }
+                        is.close();
+                        os.close();
+
+                        mNativePersonDetector = new DetectionBasedTracker(mCascadeFile.getAbsolutePath(), 0);
                         cascadeDir.delete();
 
                     } catch (IOException e) {
@@ -206,8 +224,8 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     			userLifting = userInputReceived.getString("user");
     			exerciseToDo = userInputReceived.getString("exer");
     			weightToLift = userInputReceived.getInt("weight");
-    			if(exerciseToDo.equals("Deadlift"))
-    				lineSet = 600;
+    			if(exerciseToDo.equals("Squat"))
+    				lineSet = 650;
     			else if(exerciseToDo.equals("Bicep Curls"))
     				lineSet = 700;
     	        getScreenHeightWidth();        
@@ -313,7 +331,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         switch(operatingMode){
         case 1:
         	MatOfRect detectedObj = new MatOfRect();
-            mNativeDetector.detect(mGray, detectedObj);
+        	mNativeWeightDetector.detect(mGray, detectedObj);
             
             Rect[] detObjArray = detectedObj.toArray();
             for (int i = 0; i < detObjArray.length; i++){
@@ -329,7 +347,13 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
             myHandler.post(updateRepCountResult);
         	break;
         case 2:
-        	
+        	MatOfRect detectedPerson = new MatOfRect();
+        	mNativePersonDetector.detect(mGray, detectedPerson);
+        	Rect[] detPersonArray = detectedPerson.toArray();
+            for (int i = 0; i < detPersonArray.length; i++){
+            	//Point centerRec = new Point((detObjArray[i].tl().x+detObjArray[i].br().x)/2,(detObjArray[i].tl().y+detObjArray[i].br().y)/2);
+                Imgproc.rectangle(mRgba, detPersonArray[i].tl(), detPersonArray[i].br(), DETECT_PERSON_COLOR, 3); 
+            }
         	break;
         case 3:
         	lineShow = false;
