@@ -33,9 +33,8 @@ public class MyDbHelper extends SQLiteOpenHelper {
 	}
 
 	public static synchronized MyDbHelper getInstance(Context context) {
-        if (sInstance == null) {
+        if (sInstance == null) 
             sInstance = new MyDbHelper(context.getApplicationContext());
-        }
         return sInstance;
     }
 
@@ -88,8 +87,7 @@ public class MyDbHelper extends SQLiteOpenHelper {
 		}
 	}
 	
-	public void setInfoToDB(String passedDate, String passedUser, String passedExer,
-							int passedWeight, int passedSetNum, int passedRepNum) {
+	public void setInfoToDB(String passedDate, String passedUser, String passedExer, int passedWeight, int passedSetNum, int passedRepNum) {
 		SQLiteDatabase db = this.getWritableDatabase();
 		ContentValues ipValues = new ContentValues();
 		ipValues.put(tblValDate, passedDate);
@@ -100,8 +98,7 @@ public class MyDbHelper extends SQLiteOpenHelper {
 		ipValues.put(tblValReps, passedRepNum);
 		db.insert(repTableName, null, ipValues);
 		db.close();
-		Log.i(DEBUGGING, "JUST PUT VALUES INTO DB " + passedDate + passedUser + 
-				passedExer + passedWeight + passedSetNum + passedRepNum);
+		Log.i(DEBUGGING, "JUST PUT VALUES INTO DB " + passedDate + passedUser + passedExer + passedWeight + passedSetNum + passedRepNum);
 	}
 	
 	public ArrayList<String> returnStoredExercises() {
@@ -154,5 +151,4 @@ public class MyDbHelper extends SQLiteOpenHelper {
 		}
 		return historicalInfo;	
 	}
-
 }

@@ -18,13 +18,13 @@ public class FinalActivity extends Activity {
 	private static final String    DCDEBUG             = "darrynFinishingDebug";
 	private String 				   passedUserName;
 	private String 				   passedDate;
-	TextView 					   finalDayTextView;
-	Button 				   		   historyButton;
-	Button 						   newSession;
-	ListView 					   lvDay;
-	ArrayList<String> 			   currentDayInfo;
-	FragmentTransaction 		   ft;
-	HistoricalInfoFragment         hInfoFrag;
+	private TextView 			   finalDayTextView;
+	private Button 				   historyButton;
+	private Button 				   newSession;
+	private ListView 			   lvDay;
+	private ArrayList<String> 	   currentDayInfo;
+	private FragmentTransaction    ft;
+	private HistoricalInfoFragment hInfoFrag;
 
 	
     @Override
@@ -50,8 +50,6 @@ public class FinalActivity extends Activity {
         newSession.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//            	Intent restart = new Intent(FinalActivity.this, StartingActivity.class);
-//                startActivity(restart); 
             	finish();
             }
         }); 
@@ -78,5 +76,9 @@ public class FinalActivity extends Activity {
     @Override
     public void onPause() {
         super.onPause();
+    }
+    
+    @Override
+    public void onBackPressed() {
     }
 }

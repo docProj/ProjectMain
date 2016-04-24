@@ -8,8 +8,8 @@ import android.widget.TextView;
 
 
 public class OpeningActivity extends Activity {
-    View.OnTouchListener gestureListener;
-    TextView toNextActivity;
+    private View.OnTouchListener gestureListener;
+    private TextView toNextActivity;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -25,6 +25,10 @@ public class OpeningActivity extends Activity {
     public boolean onTouchEvent(MotionEvent event) {
         	finish();
             return true;
+    }
+    
+    @Override
+    public void onBackPressed() {
     }
 
 }

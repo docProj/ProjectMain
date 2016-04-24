@@ -91,4 +91,8 @@ public class StartingActivity extends Activity implements OnItemSelectedListener
     	setResult(Activity.RESULT_OK,myIntent);
     }
     
+    @Override
+    public void onBackPressed() {
+    }
+    
 }

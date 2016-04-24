@@ -16,12 +16,12 @@ import android.widget.TextView;
 import android.widget.ArrayAdapter;
 
 public class HistoricalInfoFragment extends Fragment {
-	FinalActivity finalAct;
-	Context context = null;
-	TextView finalHistoryTextView;
-	Button returnButton;
+	private FinalActivity finalAct;
+	private Context context = null;
+	private TextView finalHistoryTextView;
+	private Button returnButton;
 	private static String passedUser;
-	ArrayList<String> historicalInfo;	
+	private ArrayList<String> historicalInfo;	
 	
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		
@@ -43,15 +43,13 @@ public class HistoricalInfoFragment extends Fragment {
             public void onClick(View v) {
         		getView().setVisibility(View.GONE);
             }
-        }); 
-		
+        }); 		
 		return fragLayout;
 	}
 	
 	@Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-       
+        super.onViewCreated(view, savedInstanceState); 
     }
 
 	public static HistoricalInfoFragment newInstance(String string) {
