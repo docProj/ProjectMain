@@ -18,7 +18,6 @@ import org.opencv.core.MatOfRect;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
-import org.opencv.core.Size;
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
 import org.opencv.imgproc.Imgproc;
@@ -38,8 +37,6 @@ import android.view.WindowManager;
 import android.widget.TextView;
 import android.widget.Button;
 import android.content.Intent;
-import android.graphics.Color;
-
 
 public class FdActivity extends Activity implements CvCameraViewListener2 {
 
@@ -51,6 +48,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
 
     private MenuItem			   menuItemlineDisplay;
     private MenuItem			   menuItemChangeCamera;
+    private MenuItem			   menuItemToggleCascade;
     private MenuItem			   menuItemCamMode1;
     private MenuItem			   menuItemCamMode2;
     private MenuItem			   menuItemCamMode3;
@@ -63,6 +61,8 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     private Mat                    mGray;
     private File                   mCascadeFile;
     private DetectionBasedTracker  mNativeWeightDetector;
+    private DetectionBasedTracker  mPerformanceDetector;
+    private DetectionBasedTracker  mStabilityDetector;
     private DetectionBasedTracker  mNativePersonDetector;
     private CameraBridgeViewBase   mOpenCvCameraView;
     private boolean				   camChange			= false;
@@ -87,6 +87,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     private int					   weightToLift;
     private int 				   setNumber			= 1;
     private boolean				   newSession			= false;
+    private boolean				   isPerformance		= true;
     
     /** Thread to update the number of reps on screen. */
     final Runnable updateRepCountResult = new Runnable() {
@@ -124,12 +125,12 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
                             os.write(buffer, 0, bytesRead);                  
                         is.close();
                         os.close();
-                        mNativeWeightDetector = new DetectionBasedTracker(mCascadeFile.getAbsolutePath(), 0);
+                        mPerformanceDetector = new DetectionBasedTracker(mCascadeFile.getAbsolutePath(), 0);
                         cascadeDir.delete();
                         
-                        is = getResources().openRawResource(R.raw.haarcascade_upperbody);
+                        is = getResources().openRawResource(R.raw.lbpcascade_weightplate6_5);
                         cascadeDir = getDir("cascade", Context.MODE_PRIVATE);
-                        mCascadeFile = new File(cascadeDir, "haarcascade_upperbody.xml");
+                        mCascadeFile = new File(cascadeDir, "lbpcascade_weightplate6_5.xml");
                         os = new FileOutputStream(mCascadeFile);
                         buffer = new byte[4096];
                         int bytesRead2;
@@ -137,8 +138,23 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
                             os.write(buffer, 0, bytesRead2);
                         is.close();
                         os.close();
+                        mStabilityDetector = new DetectionBasedTracker(mCascadeFile.getAbsolutePath(), 0);
+                        cascadeDir.delete();
+                        
+                        is = getResources().openRawResource(R.raw.haarcascade_upperbody);
+                        cascadeDir = getDir("cascade", Context.MODE_PRIVATE);
+                        mCascadeFile = new File(cascadeDir, "haarcascade_upperbody.xml");
+                        os = new FileOutputStream(mCascadeFile);
+                        buffer = new byte[4096];
+                        int bytesRead3;
+                        while ((bytesRead3 = is.read(buffer)) != -1)
+                            os.write(buffer, 0, bytesRead3);
+                        is.close();
+                        os.close();
                         mNativePersonDetector = new DetectionBasedTracker(mCascadeFile.getAbsolutePath(), 0);
                         cascadeDir.delete();
+                        
+                        mNativeWeightDetector = mPerformanceDetector;
 
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -275,6 +291,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         Log.d(TAG, "called onCreateOptionsMenu");
         menuItemlineDisplay = menu.add("Line Display");
         menuItemChangeCamera = menu.add("Swap Camera");
+        menuItemToggleCascade = menu.add("Swap to Stability");
         menuItemCamMode1 = menu.add("Mode 1 (Default)");
         menuItemCamMode2 = menu.add("Mode 2");
         menuItemCamMode3 = menu.add("Mode 3");
@@ -298,6 +315,17 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         		mOpenCvCameraView.disableView();
                 mOpenCvCameraView.setCameraIndex(0);
                 mOpenCvCameraView.enableView();
+        	}
+        }
+        else if(item == menuItemToggleCascade){
+        	isPerformance = !isPerformance;
+        	if(isPerformance){
+        		mNativeWeightDetector = mPerformanceDetector;
+        		menuItemToggleCascade.setTitle("Swap to Stability");
+        	}
+        	else if(!isPerformance){
+        		mNativeWeightDetector = mStabilityDetector;
+        		menuItemToggleCascade.setTitle("Swap to Performance");
         	}
         }
         else if(item == menuItemCamMode1)
@@ -339,7 +367,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         switch(operatingMode){
         case 1:
         	MatOfRect detectedObj = new MatOfRect();
-        	mNativeWeightDetector.detect(mGray, detectedObj);        
+        	mNativeWeightDetector.detect(mGray, detectedObj);  
             Rect[] detObjArray = detectedObj.toArray();
             for (int i = 0; i < detObjArray.length; i++){
             	Point centerRec = new Point((detObjArray[i].tl().x+detObjArray[i].br().x)/2,(detObjArray[i].tl().y+detObjArray[i].br().y)/2);
@@ -360,8 +388,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         	Rect[] detPersonArray = detectedPerson.toArray();
             for (int i = 0; i < detPersonArray.length; i++){
                 Imgproc.rectangle(mRgba, detPersonArray[i].tl(), detPersonArray[i].br(), DETECT_PERSON_COLOR, 3); 
-                lineSet = detPersonArray[i].height;
-                lineSet = lineSet - (int)(lineSet*0.8);
+                screenHeight = detPersonArray[i].height + 75;
                 getScreenHeightWidth();
                 lineShow = true;
                 operatingMode = 1;
@@ -372,8 +399,6 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         	lineShow = false;
         	backsub.apply(mRgba, mFGMask, 0.1);
         	Imgproc.cvtColor(mFGMask, mRgba, Imgproc.COLOR_GRAY2BGRA, 4);
-        	Mat element = new Mat();
-        	Imgproc.morphologyEx(mFGMask, mRgba, Imgproc.MORPH_CLOSE, element);
         	break;
         default:
         	break;
